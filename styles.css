@@ -95,8 +95,8 @@ body {
     height: 100%;
     display: flex;
     align-items: center;
-    gap: 24px;
-    padding: 0 24px;
+    gap: 16px;
+    padding: 0 16px;
 }
 .logo {
     display: flex;
@@ -122,21 +122,27 @@ body {
 }
 .header-nav {
     display: flex;
-    gap: 4px;
+    gap: 2px;
     overflow-x: auto;
+    flex: 1;
+    min-width: 0;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
 }
+.header-nav::-webkit-scrollbar { display: none; }
 .nav-tab {
     background: none;
     border: none;
     color: rgba(255,255,255,0.55);
     font-family: var(--font);
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 500;
-    padding: 8px 14px;
+    padding: 7px 10px;
     border-radius: var(--radius-sm);
     cursor: pointer;
     transition: all var(--transition);
     white-space: nowrap;
+    flex-shrink: 0;
 }
 .nav-tab:hover { color: rgba(255,255,255,0.85); background: rgba(255,255,255,0.06); }
 .nav-tab.active { color: #FFFFFF; background: rgba(255,255,255,0.12); }
@@ -144,7 +150,7 @@ body {
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-left: auto;
+    flex-shrink: 0;
 }
 .btn-icon {
     background: rgba(255,255,255,0.08);
