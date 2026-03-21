@@ -3923,30 +3923,7 @@ function displayInvestorResults(r) {
     document.getElementById('inv_results').classList.remove('hidden');
 
     // ── KPI strip ─────────────────────────────────────────────
-    const partialNote = r.firstYearFraction < 1
-        ? r.monthsInFirstYear + ' months in ' + r.purchaseYear
-        : 'full year';
-    const loanStructureLabel = r.isIO
-        ? 'IO ' + r.ioPeriod + 'yr → P&amp;I ' + (r.loanTerm - r.ioPeriod) + 'yr'
-        : 'P&amp;I ' + r.loanTerm + 'yr';
-    const kpis = [
-        { label: 'Gross Yield',        value: r.grossYield.toFixed(2) + '%',  sub: 'of purchase price',                  primary: false },
-        { label: 'Net Yield',          value: r.netYield.toFixed(2) + '%',    sub: 'after cash expenses',                primary: true  },
-        { label: 'Weekly Income',      value: fmt(r.weeklyGrossRent),          sub: 'effective rent received',            primary: false },
-        { label: 'Weekly Cash Flow',   value: fmt(r.weeklyNetCashFlow),        sub: r.weeklyNetCashFlow >= 0 ? 'cash surplus' : 'cash outlay', primary: false },
-        { label: 'Loan Structure',     value: loanStructureLabel,              sub: r.interestRate + '% p.a.',            primary: false },
-        { label: 'Annual Tax Benefit', value: fmt(r.annualTaxBenefit),         sub: 'neg. gearing @ ' + r.marginalRatePct + '%', primary: false },
-        { label: 'Yr 1 Depreciation',  value: fmt(r.yr1Dep),                  sub: partialNote + ' — Div 43 + 40',       primary: false },
-        { label: 'Div 43 Remaining',   value: r.isEligibleDiv43 ? r.div43YearsRemaining + ' yrs' : 'N/A',
-                                        sub: r.isEligibleDiv43 ? 'from ' + r.purchaseYear + ' (built ' + r.yearBuilt + ')' : 'pre-1987 or no build cost', primary: false },
-    ];
-    document.getElementById('inv_kpiStrip').innerHTML = kpis.map(k => `
-        <div class="metric-tile ${k.primary ? 'metric-primary' : ''}">
-            <div class="metric-label">${k.label}</div>
-            <div class="metric-value" style="${k.label === 'Weekly Cash Flow' ? (r.weeklyNetCashFlow < 0 ? 'color:var(--red)' : 'color:var(--emerald-dark)') : ''}">${k.value}</div>
-            <div class="metric-sub">${k.sub}</div>
-        </div>
-    `).join('');
+    // Will be re-rendered with correct year after year selector is populated below
 
     // ── Gearing badge ─────────────────────────────────────────
     const gb = document.getElementById('inv_gearingBadge');
@@ -4043,6 +4020,7 @@ function displayInvestorResults(r) {
     // ── Cash flow rows (annual by default, year 1) ────────────
     const activeFreq = document.querySelector('.inv-freq-btn.active')?.dataset.freq || 'annual';
     const activeYear = parseInt(yearSel?.value) || 1;
+    renderInvKpiStrip(r, activeYear);
     renderCashFlowRows(r, activeFreq, activeYear);
 
     // ── Depreciation summary stats ─────────────────────────────
@@ -4380,6 +4358,119 @@ function renderRateImpactChart(periods, div, unit) {
     }
 }
 
+// ── KPI strip renderer (year-aware) ──────────────────────────
+function renderInvKpiStrip(r, yearNum) {
+    const yrIdx = Math.max(0, (yearNum || 1) - 1);
+    const yr = r.depSchedule[yrIdx] || r.depSchedule[0];
+    if (!yr) return;
+
+    const fraction = yr.fraction;
+    const months = Math.round(fraction * 12);
+    const partialNote = fraction < 1 ? months + ' months in ' + yr.calYear : 'full year';
+
+    // Loan structure — static
+    const loanStructureLabel = r.isIO
+        ? 'IO ' + r.ioPeriod + 'yr → P&amp;I ' + (r.loanTerm - r.ioPeriod) + 'yr'
+        : 'P&amp;I ' + r.loanTerm + 'yr';
+
+    // Yields for selected year
+    const grossYield = (yr.rent / (fraction < 1 ? fraction : 1)) / r.purchasePrice * 100;
+    const annualisedExpenses = (yr.councilYear + yr.insuranceYear + yr.mgmtFeeYear + yr.repairsYear + yr.strataYear + yr.otherYear) / (fraction < 1 ? fraction : 1);
+    const netYield = ((yr.rent / (fraction < 1 ? fraction : 1)) - annualisedExpenses) / r.purchasePrice * 100;
+
+    // Weekly income for selected year
+    const weeklyIncome = yr.rent / (fraction * 52);
+
+    // Gearing for selected year
+    const totalExpenses = yr.councilYear + yr.insuranceYear + yr.mgmtFeeYear + yr.repairsYear + yr.strataYear + yr.otherYear;
+    const netCashFlow = yr.rent - totalExpenses - yr.repayment;
+    const gearingLabel = netCashFlow < -0.5 ? 'Negative' : netCashFlow > 0.5 ? 'Positive' : 'Neutral';
+    const gearingStatus = netCashFlow < -0.5 ? 'negative' : netCashFlow > 0.5 ? 'positive' : 'neutral';
+    const gearingColor = gearingStatus === 'negative' ? 'color:var(--red)' : 'color:var(--emerald-dark)';
+    const annualisedCF = fraction < 1 ? netCashFlow / fraction : netCashFlow;
+
+    // Property value at selected year
+    const propValAtYear = r.purchasePrice * Math.pow(1 + r.propertyGrowthRate, yearNum);
+
+    // 5yr property value for growth tile (static)
+    const propVal5yr = r.purchasePrice * Math.pow(1 + r.propertyGrowthRate, 5);
+
+    // True ROI (static — always 5yr)
+    let kpiTrueROI = 0;
+    if (r.totalCashRequired > 0) {
+        const mr = (r.interestRate / 100) / 12;
+        const tm = r.loanTerm * 12;
+        let lb5 = r.loanAmount;
+        if (r.isIO) {
+            const ioM = r.ioPeriod * 12;
+            if (ioM >= 60) { lb5 = r.loanAmount; }
+            else {
+                const piM = tm - ioM;
+                const piPay = mr > 0 ? r.loanAmount * (mr * Math.pow(1 + mr, piM)) / (Math.pow(1 + mr, piM) - 1) : r.loanAmount / piM;
+                lb5 = r.loanAmount;
+                for (let m = 0; m < 60 - ioM; m++) { const intM = lb5 * mr; lb5 -= (piPay - intM); }
+            }
+        } else {
+            const piPay = mr > 0 ? r.loanAmount * (mr * Math.pow(1 + mr, tm)) / (Math.pow(1 + mr, tm) - 1) : r.loanAmount / tm;
+            for (let m = 0; m < 60; m++) { const intM = lb5 * mr; lb5 -= (piPay - intM); }
+        }
+        lb5 = Math.max(0, lb5);
+        const eqGain = (propVal5yr - lb5) - r.deposit;
+        kpiTrueROI = eqGain / r.totalCashRequired * 100;
+    }
+
+    // Depreciation for selected year
+    const depTotal = yr.total;
+    const div43Remaining = r.isEligibleDiv43 ? Math.max(0, r.div43YearsRemaining - yrIdx) : 0;
+
+    const kpis = [
+        // Row 1: Property & income
+        { label: 'Gross Yield',        value: grossYield.toFixed(2) + '%',     sub: 'of purchase price',                  primary: false, style: '' },
+        { label: 'Net Yield',          value: netYield.toFixed(2) + '%',       sub: 'after cash expenses',                primary: true,  style: '' },
+        { label: 'Weekly Income',      value: fmt(weeklyIncome),               sub: 'effective rent received',            primary: false, style: '' },
+        { label: 'Gearing',            value: gearingLabel,                    sub: fmtSigned(annualisedCF) + '/yr net cash flow', primary: false, style: gearingColor },
+        { label: 'Loan Structure',     value: loanStructureLabel,              sub: yr.rateUsed.toFixed(2) + '% p.a. · LVR ' + r.lvr.toFixed(0) + '%', primary: false, style: '' },
+        // Row 2: Investment & tax
+        { label: 'Total Cash Required', value: fmt(r.totalCashRequired),       sub: 'deposit + all upfront costs',        primary: false, style: '' },
+        { label: 'True ROI (5yr)',      value: kpiTrueROI.toFixed(1) + '%',    sub: 'equity gain ÷ cash invested',        primary: false, style: kpiTrueROI >= 0 ? 'color:var(--emerald-dark)' : 'color:var(--red)' },
+        { label: 'Yr ' + yearNum + ' Depreciation', value: fmt(depTotal),      sub: partialNote + ' — Div 43 + 40',       primary: false, style: '' },
+        { label: 'Div 43 Remaining',   value: r.isEligibleDiv43 ? div43Remaining + ' yrs' : 'N/A',
+                                        sub: r.isEligibleDiv43 ? 'from ' + r.purchaseYear + ' (built ' + r.yearBuilt + ')' : 'pre-1987 or no build cost', primary: false, style: '' },
+        { label: 'Property Growth',    value: (r.propertyGrowthRate * 100).toFixed(1) + '% p.a.',
+                                        sub: 'Yr ' + yearNum + ' est. ' + fmt(propValAtYear), primary: false, style: '' },
+    ];
+
+    // Build year dropdown options
+    const yearOptions = r.depSchedule.map(row =>
+        '<option value="' + row.year + '"' + (row.year === yearNum ? ' selected' : '') + '>Year ' + row.year + ' (' + row.calYear + ')</option>'
+    ).join('');
+
+    document.getElementById('inv_kpiStrip').innerHTML = kpis.map(k =>
+        '<div class="metric-tile ' + (k.primary ? 'metric-primary' : '') + '">' +
+            '<div class="metric-label">' + k.label + '</div>' +
+            '<div class="metric-value" style="' + k.style + '">' + k.value + '</div>' +
+            '<div class="metric-sub">' + k.sub + '</div>' +
+        '</div>'
+    ).join('') +
+    '<div class="inv-kpi-hint">' +
+        '<select id="inv_kpiYearSelect" class="inv-year-select" onchange="onKpiYearChange()">' + yearOptions + '</select>' +
+        ' snapshot — all cards sync to selected year' +
+    '</div>';
+}
+
+function onKpiYearChange() {
+    const yearNum = parseInt(document.getElementById('inv_kpiYearSelect')?.value) || 1;
+    // Sync the CF year selector
+    const cfSel = document.getElementById('inv_cfYearSelect');
+    if (cfSel) cfSel.value = yearNum;
+    // Re-render all year-dependent sections
+    if (window._lastInvResult) {
+        renderInvKpiStrip(window._lastInvResult, yearNum);
+        const freq = document.querySelector('.inv-freq-btn.active')?.dataset.freq || 'annual';
+        renderCashFlowRows(window._lastInvResult, freq, yearNum);
+    }
+}
+
 function switchCFFreq(freq, btn) {
     document.querySelectorAll('.inv-freq-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
@@ -4390,7 +4481,14 @@ function switchCFFreq(freq, btn) {
 function onCFYearChange() {
     const freq = document.querySelector('.inv-freq-btn.active')?.dataset.freq || 'annual';
     const yearNum = parseInt(document.getElementById('inv_cfYearSelect')?.value) || 1;
-    if (window._lastInvResult) renderCashFlowRows(window._lastInvResult, freq, yearNum);
+    // Sync the KPI year selector
+    const kpiSel = document.getElementById('inv_kpiYearSelect');
+    if (kpiSel) kpiSel.value = yearNum;
+    // Re-render all year-dependent sections
+    if (window._lastInvResult) {
+        renderInvKpiStrip(window._lastInvResult, yearNum);
+        renderCashFlowRows(window._lastInvResult, freq, yearNum);
+    }
 }
 
 function renderTaxBenefitRows(r, yearNum) {

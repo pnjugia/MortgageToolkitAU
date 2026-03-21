@@ -3145,10 +3145,41 @@ tbody tr.fy-separator-row td {
     margin-top: auto;
 }
 
+/* ---- KPI hint ---- */
+.inv-kpi-hint {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text-secondary);
+    padding: 2px 0 0;
+    opacity: 0.7;
+}
+.inv-kpi-hint .inv-year-select {
+    display: inline-flex;
+    font-size: 11px;
+    padding: 2px 18px 2px 6px;
+    min-width: 0;
+    width: auto;
+    max-width: 120px;
+}
+.inv-metrics {
+    grid-template-columns: repeat(5, 1fr);
+}
+@media (max-width: 1100px) {
+    .inv-metrics { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 768px) {
+    .inv-metrics { grid-template-columns: repeat(2, 1fr); }
+}
+
 /* ---- Cards ---- */
 .inv-card {
     background: var(--bg-card);
     border: 1px solid var(--border);
+
     border-radius: var(--radius-lg);
     padding: 20px 22px;
     box-shadow: var(--shadow-sm);
