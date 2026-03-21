@@ -25,10 +25,6 @@
             <nav class="header-nav">
                 <button class="nav-tab active" data-tab="home">Home</button>
                 <button class="nav-tab" data-tab="calculator">Calculator</button>
-                <button class="nav-tab" data-tab="myloan">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:4px;vertical-align:-1px"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
-                    My Loan
-                </button>
                 <button class="nav-tab" data-tab="fhb">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:4px;vertical-align:-1px"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
                     FHB Hub
@@ -241,10 +237,6 @@
                     <div class="panel-header">
                         <h2>Loan Details</h2>
                         <span class="panel-subtitle">Fill in your mortgage details</span>
-                        <button type="button" class="form-reset-btn" onclick="resetFormDefaults('calculator')" title="Reset to default values">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
-                            Defaults
-                        </button>
                     </div>
 
                     <form id="mortgageForm">
@@ -328,28 +320,6 @@
                                 </select>
                                 <small class="field-hint">Fortnightly pays 26 × half-monthly — saves interest over the loan</small>
                             </div>
-
-                            <div class="form-group">
-                                <label class="toggle-label">
-                                    <input type="checkbox" id="interestOnly">
-                                    <span class="toggle-text">Interest Only Loan</span>
-                                </label>
-                                <small class="field-hint" style="margin-top:6px">Common for investors — lower repayments during IO period, higher after</small>
-                            </div>
-
-                            <div class="form-group hidden" id="ioTermGroup">
-                                <label for="ioTerm">Interest Only Period
-                                    <span class="inline-badge" id="ioTermBadge">5 yrs</span>
-                                </label>
-                                <input type="range" id="ioTermSlider" class="range-slider" min="1" max="15" step="1" value="5">
-                                <div class="range-labels">
-                                    <span>1 yr</span><span>5 yrs</span><span>10 yrs</span><span>15 yrs</span>
-                                </div>
-                                <div class="input-wrap" style="margin-top:6px">
-                                    <input type="number" id="ioTerm" value="5" min="1" max="15" step="1">
-                                    <span class="input-suffix">yrs</span>
-                                </div>
-                            </div>
                         </div>
 
                         <!-- Advanced Section -->
@@ -385,6 +355,28 @@
                                         <input type="number" id="customRepayment" min="0" step="1" placeholder="Auto-calculated">
                                     </div>
                                     <small class="field-hint">Override the calculated minimum — useful if your lender rounds up</small>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="toggle-label">
+                                        <input type="checkbox" id="interestOnly">
+                                        <span class="toggle-text">Interest Only Loan</span>
+                                    </label>
+                                    <small class="field-hint" style="margin-top:6px">Common for investors — lower repayments during IO period, higher after</small>
+                                </div>
+
+                                <div class="form-group hidden" id="ioTermGroup">
+                                    <label for="ioTerm">Interest Only Period
+                                        <span class="inline-badge" id="ioTermBadge">5 yrs</span>
+                                    </label>
+                                    <input type="range" id="ioTermSlider" class="range-slider" min="1" max="15" step="1" value="5">
+                                    <div class="range-labels">
+                                        <span>1 yr</span><span>5 yrs</span><span>10 yrs</span><span>15 yrs</span>
+                                    </div>
+                                    <div class="input-wrap" style="margin-top:6px">
+                                        <input type="number" id="ioTerm" value="5" min="1" max="15" step="1">
+                                        <span class="input-suffix">yrs</span>
+                                    </div>
                                 </div>
 
                             </div>
@@ -648,327 +640,6 @@
         </div>
 
 
-        <!-- MY LOAN TAB -->
-        <div id="tab-myloan" class="tab-panel">
-            <div class="calc-layout">
-
-                <!-- Left: Input Panel -->
-                <aside class="input-panel">
-                    <div class="panel-header">
-                        <h2>My Loan Tracker</h2>
-                        <span class="panel-subtitle">Track your existing mortgage</span>
-                        <button type="button" class="form-reset-btn" onclick="resetFormDefaults('myloan')" title="Reset to default values">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
-                            Defaults
-                        </button>
-                    </div>
-
-                    <form id="myLoanForm" onsubmit="event.preventDefault(); calculateMyLoan();">
-
-                        <!-- Original Loan -->
-                        <div class="form-section">
-                            <div class="form-section-label">Original Loan</div>
-
-                            <div class="form-group">
-                                <label for="ml_startMonth">Loan Start Date</label>
-                                <div style="display:flex;gap:8px">
-                                    <select id="ml_startMonth" style="flex:1">
-                                        <option value="0">Jan</option><option value="1">Feb</option>
-                                        <option value="2">Mar</option><option value="3">Apr</option>
-                                        <option value="4">May</option><option value="5">Jun</option>
-                                        <option value="6">Jul</option><option value="7">Aug</option>
-                                        <option value="8">Sep</option><option value="9">Oct</option>
-                                        <option value="10">Nov</option><option value="11">Dec</option>
-                                    </select>
-                                    <div class="input-wrap" style="flex:1">
-                                        <input type="number" id="ml_startYear" value="2021" min="1990" max="2026" step="1">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="ml_originalAmount">Original Loan Amount</label>
-                                <div class="input-wrap">
-                                    <span class="input-prefix">$</span>
-                                    <input type="number" id="ml_originalAmount" value="600000" min="0" step="1000">
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="ml_propertyPrice">Property Purchase Price <span class="optional-label">for LVR</span></label>
-                                <div class="input-wrap">
-                                    <span class="input-prefix">$</span>
-                                    <input type="number" id="ml_propertyPrice" value="750000" min="0" step="1000">
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="ml_originalRate">Original Interest Rate (% p.a.)</label>
-                                <div class="input-wrap">
-                                    <input type="number" id="ml_originalRate" value="2.49" min="0" max="20" step="0.01">
-                                    <span class="input-suffix">%</span>
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="ml_loanTerm">Loan Term (years)</label>
-                                <div class="input-wrap">
-                                    <input type="number" id="ml_loanTerm" value="30" min="1" max="40" step="1">
-                                    <span class="input-suffix">yrs</span>
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="ml_frequency">Repayment Frequency</label>
-                                <select id="ml_frequency">
-                                    <option value="monthly" selected>Monthly</option>
-                                    <option value="fortnightly">Fortnightly</option>
-                                    <option value="weekly">Weekly</option>
-                                </select>
-                            </div>
-
-                            <div class="form-group">
-                                <label class="toggle-label">
-                                    <input type="checkbox" id="ml_ioToggle">
-                                    <span class="toggle-text">Had Interest-Only Period</span>
-                                </label>
-                            </div>
-                            <div class="form-group hidden" id="ml_ioGroup">
-                                <label for="ml_ioPeriod">Interest-Only Period
-                                    <span class="inline-badge" id="ml_ioBadge">5 yrs</span>
-                                </label>
-                                <input type="range" id="ml_ioSlider" class="range-slider" min="1" max="15" step="1" value="5">
-                                <div class="range-labels"><span>1 yr</span><span>5 yrs</span><span>10 yrs</span><span>15 yrs</span></div>
-                            </div>
-                        </div>
-
-                        <!-- Rate Change History -->
-                        <div class="form-section">
-                            <div class="form-section-label">
-                                Rate Change History
-                                <button type="button" class="link-btn" onclick="addRateChange()" style="font-size:12px">+ Add</button>
-                            </div>
-                            <small class="field-hint" style="margin-bottom:10px;display:block">Add each time your rate changed — we'll reconstruct your actual repayment history</small>
-                            <div id="ml_rateChanges"></div>
-                        </div>
-
-                        <!-- Current Extras -->
-                        <div class="form-section">
-                            <div class="form-section-label">Current Situation</div>
-
-                            <div class="form-group">
-                                <label class="toggle-label">
-                                    <input type="checkbox" id="ml_offsetToggle">
-                                    <span class="toggle-text">Offset Account</span>
-                                </label>
-                            </div>
-                            <div class="inv-offset-group hidden" id="ml_offsetGroup">
-                                <div class="form-group">
-                                    <label for="ml_offset">Current Offset Balance</label>
-                                    <div class="input-wrap">
-                                        <span class="input-prefix">$</span>
-                                        <input type="number" id="ml_offset" value="0" min="0" step="1000">
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label for="ml_offsetMonthly">Monthly Contribution</label>
-                                    <div class="input-wrap">
-                                        <span class="input-prefix">$</span>
-                                        <input type="number" id="ml_offsetMonthly" value="0" min="0" step="100">
-                                        <span class="input-suffix">/ mo</span>
-                                    </div>
-                                    <small class="field-hint">Added to offset each month — reduces interest on the effective loan balance</small>
-                                </div>
-                                <div class="inv-offset-preview" id="ml_offsetPreview"></div>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="ml_extraRepay">Extra Repayment <span class="optional-label">optional</span></label>
-                                <div class="input-wrap">
-                                    <span class="input-prefix">$</span>
-                                    <input type="number" id="ml_extraRepay" value="0" min="0" step="50">
-                                </div>
-                                <small class="field-hint">Per period — applied from today forward</small>
-                            </div>
-                        </div>
-
-                        <div class="calc-btn-row">
-                            <button type="submit" class="calc-btn">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
-                                Track My Loan
-                            </button>
-                            <button type="button" class="calc-reset-btn" onclick="resetMyLoan()" title="Reset">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.41"/></svg>
-                                Reset
-                            </button>
-                        </div>
-                    </form>
-                </aside>
-
-                <!-- Right: Results Panel -->
-                <div class="results-panel">
-                    <div id="ml_results" class="results hidden">
-
-                        <!-- Key Metrics -->
-                        <div class="metrics-strip">
-                            <div class="metric-tile metric-primary">
-                                <div class="metric-label">Current Balance</div>
-                                <div class="metric-value" id="ml_balance">$0</div>
-                                <div class="metric-sub" id="ml_balanceSub">estimated today</div>
-                            </div>
-                            <div class="metric-tile">
-                                <div class="metric-label">Interest Paid</div>
-                                <div class="metric-value" id="ml_interestPaid" style="color:var(--red)">$0</div>
-                                <div class="metric-sub" id="ml_interestPaidSub">since start</div>
-                            </div>
-                            <div class="metric-tile">
-                                <div class="metric-label">Principal Paid</div>
-                                <div class="metric-value" id="ml_principalPaid" style="color:var(--blue)">$0</div>
-                                <div class="metric-sub" id="ml_principalPaidSub">of original loan</div>
-                            </div>
-                            <div class="metric-tile">
-                                <div class="metric-label">Equity / LVR</div>
-                                <div class="metric-value" id="ml_equity">—</div>
-                                <div class="metric-sub" id="ml_equitySub"></div>
-                            </div>
-                        </div>
-
-                        <!-- Then vs Now comparison -->
-                        <div class="chart-breakdown-row">
-                            <div class="breakdown-cards ml-breakdown-cards" style="width:100%">
-                                <div class="bcard">
-                                    <div class="bcard-header">
-                                        <div class="bcard-dot dot-blue"></div>
-                                        <h3>Loan Progress</h3>
-                                    </div>
-                                    <div class="bcard-row"><span>Original loan</span><strong id="ml_origLoan">$0</strong></div>
-                                    <div class="bcard-row"><span>Paid off so far</span><strong id="ml_paidOff" style="color:var(--emerald-dark)">$0</strong></div>
-                                    <div class="bcard-row"><span>Remaining balance</span><strong id="ml_remaining">$0</strong></div>
-                                    <div class="bcard-row"><span>Loan elapsed</span><strong id="ml_elapsed">—</strong></div>
-                                    <div class="bcard-row"><span>Remaining term</span><strong id="ml_remainingTerm">—</strong></div>
-                                </div>
-
-                                <div class="bcard">
-                                    <div class="bcard-header">
-                                        <div class="bcard-dot dot-amber"></div>
-                                        <h3>Then vs Now</h3>
-                                    </div>
-                                    <div class="bcard-row"><span>Original rate</span><strong id="ml_origRate">—</strong></div>
-                                    <div class="bcard-row"><span>Current rate</span><strong id="ml_curRate">—</strong></div>
-                                    <div class="bcard-row"><span>Original repayment</span><strong id="ml_origRepay">$0</strong></div>
-                                    <div class="bcard-row"><span>Current repayment</span><strong id="ml_curRepay">$0</strong></div>
-                                    <div class="bcard-row"><span>Repayment change</span><strong id="ml_repayChange">—</strong></div>
-                                </div>
-
-                                <div class="bcard">
-                                    <div class="bcard-header">
-                                        <div class="bcard-dot dot-green"></div>
-                                        <h3>Future Outlook</h3>
-                                    </div>
-                                    <div class="bcard-row"><span>Projected payoff date</span><strong id="ml_payoffDate">—</strong></div>
-                                    <div class="bcard-row"><span>Remaining interest</span><strong id="ml_futureInterest" style="color:var(--red)">$0</strong></div>
-                                    <div class="bcard-row"><span>Total interest (life of loan)</span><strong id="ml_totalInterest">$0</strong></div>
-                                    <div class="bcard-row"><span>Total cost (principal + interest)</span><strong id="ml_totalCost">$0</strong></div>
-                                </div>
-
-                                <div class="bcard" id="ml_valuationCard" style="display:none">
-                                    <div class="bcard-header">
-                                        <div class="bcard-dot" style="background:var(--emerald)"></div>
-                                        <h3>Property Valuation</h3>
-                                        <button type="button" class="link-btn" style="margin-left:auto;font-size:11px" onclick="openPropertyLookup()">
-                                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-1px;margin-right:2px"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                                            Look up actual value
-                                        </button>
-                                    </div>
-                                    <div class="ml-valuation-grid">
-                                        <div class="bcard-row"><span>Purchase price</span><strong id="ml_valPurchase">$0</strong></div>
-                                        <div class="bcard-row"><span>Current LVR</span><strong id="ml_valLVR">—</strong></div>
-                                        <div class="bcard-row"><span>Est. current value</span><strong id="ml_valCurrent" style="color:var(--emerald-dark)">$0</strong></div>
-                                        <div class="bcard-row"><span>Total equity</span><strong id="ml_valTotalEquity" style="color:var(--emerald-dark)">$0</strong></div>
-                                        <div class="bcard-row"><span>Capital growth</span><strong id="ml_valGrowth">$0</strong></div>
-                                        <div class="bcard-row"><span>Usable equity (80% LVR)</span><strong id="ml_valUsableEquity">$0</strong></div>
-                                        <div class="bcard-row"><span>Growth rate used</span><strong id="ml_valGrowthRate">—</strong></div>
-                                    </div>
-                                    <div class="ml-val-override" id="ml_valOverride">
-                                        <label for="ml_valOverrideInput">Override with actual value:</label>
-                                        <div class="input-wrap" style="max-width:180px">
-                                            <span class="input-prefix">$</span>
-                                            <input type="number" id="ml_valOverrideInput" min="0" step="5000" placeholder="e.g. 920000" onchange="applyValuationOverride()">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Rate History Timeline -->
-                        <div class="timeline-section">
-                            <div class="section-header">
-                                <h3>Rate &amp; Repayment History</h3>
-                            </div>
-                            <div id="ml_rateTimeline" class="ml-rate-timeline"></div>
-                        </div>
-
-                        <!-- Balance Over Time Chart -->
-                        <div class="timeline-section">
-                            <div class="section-header">
-                                <h3>Loan Balance — Past &amp; Projected</h3>
-                            </div>
-                            <canvas id="ml_balanceChart" height="240"></canvas>
-                        </div>
-
-                        <!-- Schedule -->
-                        <div class="schedule-section">
-                            <div class="section-header">
-                                <h3>Full Repayment Schedule</h3>
-                                <div class="schedule-controls">
-                                    <button type="button" class="control-btn" onclick="mlExportCSV()">
-                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                                        CSV
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="table-container">
-                                <table id="ml_scheduleTable">
-                                    <thead>
-                                        <tr>
-                                            <th>Period</th>
-                                            <th>Rate</th>
-                                            <th>Payment</th>
-                                            <th>Principal</th>
-                                            <th>Interest</th>
-                                            <th>Balance</th>
-                                            <th>Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="ml_scheduleBody"></tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        <div class="calc-disclaimer-bubble">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                            <p>Balances are estimates based on standard amortisation. Your actual balance may differ due to lender rounding, fee capitalisation, redraw usage, or repayment timing. Check your lender statement for exact figures.</p>
-                        </div>
-                    </div>
-
-                    <!-- Empty State -->
-                    <div id="ml_empty" class="empty-state">
-                        <div class="empty-illustration">
-                            <svg width="120" height="100" viewBox="0 0 120 100" fill="none">
-                                <rect x="10" y="30" width="100" height="60" rx="8" fill="#E8F4FF" stroke="#B5D4F4" stroke-width="1.5"/>
-                                <path d="M20 75 L40 55 L55 65 L75 40 L100 50" stroke="#378ADD" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-                                <line x1="55" y1="30" x2="55" y2="90" stroke="#00C896" stroke-width="1.5" stroke-dasharray="4 3"/>
-                                <text x="56" y="28" fill="#00C896" font-size="9" font-family="DM Sans">Today</text>
-                            </svg>
-                        </div>
-                        <h3>Track your existing mortgage</h3>
-                        <p>Enter your original loan details and rate changes to see where you stand today — and what's ahead.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-
         <!-- FHB HUB TAB -->
         <div id="tab-fhb" class="tab-panel">
             <div class="fhb-layout">
@@ -978,10 +649,6 @@
                     <div class="panel-header">
                         <h2>First Home Buyer Hub</h2>
                         <span class="panel-subtitle">Every federal &amp; state scheme in one place</span>
-                        <button type="button" class="form-reset-btn" onclick="resetFormDefaults('fhb')" title="Reset to default values">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
-                            Defaults
-                        </button>
                     </div>
 
                     <div id="fhbForm">
@@ -1141,10 +808,6 @@
                     <div class="panel-header">
                         <h2>Borrowing Power</h2>
                         <span class="panel-subtitle">APRA-aligned serviceability estimate</span>
-                        <button type="button" class="form-reset-btn" onclick="resetFormDefaults('borrowing')" title="Reset to default values">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
-                            Defaults
-                        </button>
                     </div>
 
                     <!-- Income -->
@@ -1342,13 +1005,7 @@
                 <!-- Left: Inputs -->
                 <div class="tool-input tool-input--wide">
                     <h2>Stamp Duty &amp; Upfront Costs</h2>
-                    <div style="display:flex;justify-content:space-between;align-items:center">
-                        <p class="tool-desc">Every dollar you need at settlement — not just stamp duty.</p>
-                        <button type="button" class="form-reset-btn" onclick="resetFormDefaults('stamp-duty')" title="Reset to default values">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
-                            Defaults
-                        </button>
-                    </div>
+                    <p class="tool-desc">Every dollar you need at settlement — not just stamp duty.</p>
 
                     <!-- Buyer type advisory panel — shown on investor switch, collapsed by default -->
                     <div class="uc-advisory hidden" id="uc_investorAdvisory">
@@ -1724,10 +1381,6 @@
                     <div class="panel-header">
                         <h2>Rate Watch</h2>
                         <span class="panel-subtitle">RBA simulator &amp; fixed vs variable analyser</span>
-                        <button type="button" class="form-reset-btn" onclick="resetFormDefaults('ratewatch')" title="Reset to default values">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
-                            Defaults
-                        </button>
                     </div>
 
                     <div class="form-section">
@@ -1887,28 +1540,11 @@
                     <div class="panel-header">
                         <h2>Property Details</h2>
                         <span class="panel-subtitle">Investment property analysis</span>
-                        <button type="button" class="form-reset-btn" onclick="resetFormDefaults('investor')" title="Reset to default values">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
-                            Defaults
-                        </button>
                     </div>
 
                     <!-- Property -->
                     <div class="form-section">
                         <div class="form-section-label">Property</div>
-                        <div class="form-group">
-                            <label for="inv_state">State / Territory</label>
-                            <select id="inv_state">
-                                <option value="NSW" selected>New South Wales</option>
-                                <option value="VIC">Victoria</option>
-                                <option value="QLD">Queensland</option>
-                                <option value="WA">Western Australia</option>
-                                <option value="SA">South Australia</option>
-                                <option value="TAS">Tasmania</option>
-                                <option value="ACT">Australian Capital Territory</option>
-                                <option value="NT">Northern Territory</option>
-                            </select>
-                        </div>
                         <div class="form-group">
                             <label for="inv_purchasePrice">Purchase Price</label>
                             <div class="input-wrap">
@@ -1998,9 +1634,7 @@
                     <div class="form-section">
                         <div class="form-section-label">Loan</div>
                         <div class="form-group">
-                            <label for="inv_interestRate">Interest Rate (% p.a.)
-                                <span class="inline-badge" id="inv_rateBadge"></span>
-                            </label>
+                            <label for="inv_interestRate">Interest Rate (% p.a.)</label>
                             <div class="input-wrap">
                                 <input type="number" id="inv_interestRate" value="6.29" min="0" max="20" step="0.01">
                                 <span class="input-suffix">%</span>
@@ -2029,48 +1663,6 @@
                             </div>
                             <small class="field-hint">After the IO period, loan switches to P&amp;I for remaining term</small>
                         </div>
-
-                        <!-- Offset Account -->
-                        <div class="form-group">
-                            <label class="toggle-label">
-                                <input type="checkbox" id="inv_offsetToggle">
-                                <span class="toggle-text">Offset Account</span>
-                            </label>
-                        </div>
-                        <div class="inv-offset-group hidden" id="inv_offsetGroup">
-                            <div class="form-group">
-                                <label for="inv_offsetBalance">Starting Offset Balance</label>
-                                <div class="input-wrap">
-                                    <span class="input-prefix">$</span>
-                                    <input type="number" id="inv_offsetBalance" value="0" min="0" step="1000">
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label for="inv_offsetMonthly">Monthly Contribution</label>
-                                <div class="input-wrap">
-                                    <span class="input-prefix">$</span>
-                                    <input type="number" id="inv_offsetMonthly" value="500" min="0" step="100">
-                                    <span class="input-suffix">/ mo</span>
-                                </div>
-                                <small class="field-hint">Added to offset each month — reduces interest on the effective loan balance</small>
-                            </div>
-                            <div class="inv-offset-preview" id="inv_offsetPreview"></div>
-                        </div>
-
-                        <!-- Rate Changes -->
-                        <div class="form-group">
-                            <label class="toggle-label">
-                                <input type="checkbox" id="inv_rateChangesToggle">
-                                <span class="toggle-text">Rate Change History &amp; Forecast</span>
-                            </label>
-                        </div>
-                        <div class="inv-rate-changes hidden" id="inv_rateChangesGroup">
-                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-                                <small class="field-hint" style="margin:0;display:block">Add past or future rate changes — projection uses each rate from that year onward.</small>
-                                <button type="button" class="link-btn" style="font-size:12px;white-space:nowrap" onclick="addInvRateChange()">+ Add</button>
-                            </div>
-                            <div id="inv_rateChanges"></div>
-                        </div>
                     </div>
 
                     <!-- Rental Income -->
@@ -2092,16 +1684,6 @@
                             <div class="range-labels">
                                 <span>0%</span><span>3%</span><span>6%</span><span>12%</span>
                             </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="inv_rentGrowth">Annual Rent Growth
-                                <span class="inline-badge" id="inv_rentGrowthBadge">3.5%</span>
-                            </label>
-                            <input type="range" id="inv_rentGrowth" class="range-slider" min="0" max="10" step="0.5" value="3.5">
-                            <div class="range-labels">
-                                <span>0%</span><span>2.5%</span><span>5%</span><span>10%</span>
-                            </div>
-                            <small class="field-hint">Applied to weekly rent in the multi-year P&amp;L projection</small>
                         </div>
                     </div>
 
@@ -2240,21 +1822,23 @@
 
                         </div>
 
+                        <!-- Rent growth -->
+                        <div class="form-group" style="margin-top:14px">
+                            <label for="inv_rentGrowth">Annual Rent Growth
+                                <span class="inline-badge" id="inv_rentGrowthBadge">3.5%</span>
+                            </label>
+                            <input type="range" id="inv_rentGrowth" class="range-slider" min="0" max="10" step="0.5" value="3.5">
+                            <div class="range-labels">
+                                <span>0%</span><span>2.5%</span><span>5%</span><span>10%</span>
+                            </div>
+                            <small class="field-hint">Applied to weekly rent in the multi-year P&amp;L projection</small>
+                        </div>
+
                     </div>
 
-                    <!-- Growth & Tax -->
+                    <!-- Tax & Growth -->
                     <div class="form-section">
-                        <div class="form-section-label">Growth &amp; Tax</div>
-                        <div class="form-group">
-                            <label for="inv_propertyGrowth">Annual Property Growth Rate
-                                <span class="inline-badge" id="inv_propertyGrowthBadge">6.0%</span>
-                            </label>
-                            <input type="range" id="inv_propertyGrowth" class="range-slider" min="0" max="15" step="0.5" value="6">
-                            <div class="range-labels">
-                                <span>0%</span><span>4%</span><span>8%</span><span>15%</span>
-                            </div>
-                            <small class="field-hint">Australian median long-run growth ~6–7% p.a. (CoreLogic)</small>
-                        </div>
+                        <div class="form-section-label">Tax &amp; Growth</div>
                         <div class="form-group">
                             <label for="inv_marginalRate">Marginal Tax Rate</label>
                             <select id="inv_marginalRate">
@@ -2265,84 +1849,15 @@
                                 <option value="45">45% — $180,001+</option>
                             </select>
                         </div>
-                    </div>
-
-                    <!-- Acquisition Costs -->
-                    <div class="form-section">
-                        <div class="form-section-label">Acquisition Costs</div>
-                        <small class="field-hint" style="margin-bottom:10px;display:block">Auto-calculated based on state, price &amp; LVR. Edit any field to override.</small>
-
-                        <!-- Stamp duty (auto) -->
                         <div class="form-group">
-                            <label for="inv_stampDuty">Stamp Duty
-                                <span class="inline-badge" id="inv_stampDutyState">NSW</span>
+                            <label for="inv_propertyGrowth">Annual Property Growth Rate
+                                <span class="inline-badge" id="inv_propertyGrowthBadge">6.0%</span>
                             </label>
-                            <div class="input-wrap input-wrap--readonly">
-                                <span class="input-prefix">$</span>
-                                <input type="number" id="inv_stampDuty" value="0" min="0" step="100" readonly>
+                            <input type="range" id="inv_propertyGrowth" class="range-slider" min="0" max="15" step="0.5" value="6">
+                            <div class="range-labels">
+                                <span>0%</span><span>4%</span><span>8%</span><span>15%</span>
                             </div>
-                        </div>
-
-                        <!-- LMI (auto, shown when LVR > 80%) -->
-                        <div class="form-group" id="inv_lmiGroup" style="display:none">
-                            <label for="inv_lmiAmount">LMI Premium (est.)
-                                <span class="inline-badge inv-lmi-badge" id="inv_lmiBadge">LVR 80%</span>
-                            </label>
-                            <div class="input-wrap input-wrap--readonly">
-                                <span class="input-prefix">$</span>
-                                <input type="number" id="inv_lmiAmount" value="0" min="0" step="100" readonly>
-                            </div>
-                            <small class="field-hint">Indicative Genworth/QBE rate — can be capitalised into loan</small>
-                        </div>
-
-                        <div class="inv-acq-two-col">
-                            <div class="form-group">
-                                <label for="inv_conveyancing">Conveyancing</label>
-                                <div class="input-wrap">
-                                    <span class="input-prefix">$</span>
-                                    <input type="number" id="inv_conveyancing" value="2200" min="0" step="100">
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label for="inv_buildInspection">Building Inspection</label>
-                                <div class="input-wrap">
-                                    <span class="input-prefix">$</span>
-                                    <input type="number" id="inv_buildInspection" value="600" min="0" step="50">
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label for="inv_pestInspection">Pest Inspection</label>
-                                <div class="input-wrap">
-                                    <span class="input-prefix">$</span>
-                                    <input type="number" id="inv_pestInspection" value="300" min="0" step="50">
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label for="inv_lenderFees">Lender Fees</label>
-                                <div class="input-wrap">
-                                    <span class="input-prefix">$</span>
-                                    <input type="number" id="inv_lenderFees" value="900" min="0" step="50">
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label for="inv_qsReport">QS Report <span class="optional-label">Div 40/43</span></label>
-                                <div class="input-wrap">
-                                    <span class="input-prefix">$</span>
-                                    <input type="number" id="inv_qsReport" value="800" min="0" step="50">
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label for="inv_otherAcqCosts">Other / Buffer</label>
-                                <div class="input-wrap">
-                                    <span class="input-prefix">$</span>
-                                    <input type="number" id="inv_otherAcqCosts" value="2000" min="0" step="500">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="inv-acq-total" id="inv_acqTotalPreview">
-                            <span>Total Acquisition Costs</span>
-                            <strong id="inv_acqTotalAmount">$0</strong>
+                            <small class="field-hint">Australian median long-run growth ~6–7% p.a. (CoreLogic)</small>
                         </div>
                     </div>
 
@@ -2377,77 +1892,17 @@
                         <!-- Yield & Cash Flow KPIs -->
                         <div class="metrics-strip inv-metrics" id="inv_kpiStrip"></div>
 
-                        <!-- Acquisition Costs & True ROI -->
-                        <div class="inv-card inv-card--full inv-acq-card" id="inv_acqCard" style="display:none">
-                            <div class="inv-card-header">
-                                <h3>Acquisition Costs &amp; True ROI</h3>
-                                <span class="inv-acq-state-badge" id="inv_acqStateBadge">NSW</span>
-                            </div>
-                            <div class="inv-acq-grid">
-                                <!-- Left: cost breakdown -->
-                                <div class="inv-acq-breakdown">
-                                    <div class="inv-acq-section">
-                                        <div class="inv-acq-section-label">Government &amp; Tax</div>
-                                        <div id="inv_acqGovRows" class="inv-acq-rows"></div>
-                                    </div>
-                                    <div class="inv-acq-section">
-                                        <div class="inv-acq-section-label">Professional &amp; Lender Fees</div>
-                                        <div id="inv_acqFeeRows" class="inv-acq-rows"></div>
-                                    </div>
-                                    <div class="inv-acq-total-bar">
-                                        <span>Total Upfront Costs (excl. deposit)</span>
-                                        <strong id="inv_acqFeesTotal">$0</strong>
-                                    </div>
-                                </div>
-                                <!-- Right: cash required + true ROI -->
-                                <div class="inv-acq-roi">
-                                    <div class="inv-acq-roi-hero">
-                                        <div class="inv-acq-roi-label">Total Cash Required at Settlement</div>
-                                        <div class="inv-acq-roi-amount" id="inv_acqCashRequired">$0</div>
-                                        <div class="inv-acq-roi-sub" id="inv_acqCashSub"></div>
-                                    </div>
-                                    <div class="inv-acq-roi-metrics">
-                                        <div class="inv-acq-roi-metric">
-                                            <span class="inv-acq-roi-metric-label">Deposit</span>
-                                            <span class="inv-acq-roi-metric-value" id="inv_acqDeposit">$0</span>
-                                        </div>
-                                        <div class="inv-acq-roi-metric">
-                                            <span class="inv-acq-roi-metric-label">Upfront Costs</span>
-                                            <span class="inv-acq-roi-metric-value" id="inv_acqCosts">$0</span>
-                                        </div>
-                                        <div class="inv-acq-roi-metric">
-                                            <span class="inv-acq-roi-metric-label">Costs as % of Price</span>
-                                            <span class="inv-acq-roi-metric-value" id="inv_acqCostPct">0%</span>
-                                        </div>
-                                        <div class="inv-acq-roi-divider"></div>
-                                        <div class="inv-acq-roi-metric inv-acq-roi-metric--highlight">
-                                            <span class="inv-acq-roi-metric-label">True ROI (5yr equity / cash invested)</span>
-                                            <span class="inv-acq-roi-metric-value" id="inv_acqTrueROI">0%</span>
-                                        </div>
-                                        <div class="inv-acq-roi-metric">
-                                            <span class="inv-acq-roi-metric-label">Simple ROI (excl. costs)</span>
-                                            <span class="inv-acq-roi-metric-value" id="inv_acqSimpleROI">0%</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <p class="inv-disclaimer" style="margin-top:10px">Stamp duty calculated using investor rates for the selected state. LMI is indicative (Genworth/QBE schedules). True ROI = (5-year equity gain) ÷ (total cash invested at settlement). Actual costs vary — obtain individual quotes.</p>
-                        </div>
-
-                        <!-- Cash Flow + Tax Benefit (equal height) -->
-                        <div class="inv-two-col inv-cf-tax-row">
+                        <!-- Cash Flow + Gearing -->
+                        <div class="inv-two-col">
 
                             <!-- Annual cash flow card -->
                             <div class="inv-card">
                                 <div class="inv-card-header">
                                     <h3>Annual Cash Flow Position</h3>
                                     <div style="display:flex;align-items:center;gap:8px">
-                                        <select id="inv_cfYearSelect" class="inv-year-select" onchange="onCFYearChange()">
-                                            <option value="1">Year 1</option>
-                                        </select>
                                         <div class="inv-freq-toggle">
                                             <button class="inv-freq-btn active" data-freq="annual" onclick="switchCFFreq('annual',this)">Annual</button>
-                                            <button class="inv-freq-btn" data-freq="monthly" onclick="switchCFFreq('monthly',this)">Monthly</button>
+                                            <button class="inv-freq-btn" data-freq="weekly" onclick="switchCFFreq('weekly',this)">Weekly</button>
                                         </div>
                                         <span class="inv-gearing-badge" id="inv_gearingBadge">—</span>
                                     </div>
@@ -2466,17 +1921,6 @@
                                 <div class="inv-total-row" id="inv_taxTotal"></div>
                                 <div class="inv-after-tax" id="inv_afterTax"></div>
                             </div>
-                        </div>
-
-                        <!-- Cash Flow by Rate (full width, shown when rate changes active) -->
-                        <div class="inv-card inv-card--full inv-rc-chart-card" id="inv_rcChartCard" style="display:none">
-                            <div class="inv-card-header">
-                                <h3>Cash Flow by Rate</h3>
-                            </div>
-                            <div class="inv-rc-chart-wrap">
-                                <canvas id="inv_rcChart"></canvas>
-                            </div>
-                            <div class="inv-rc-summary" id="inv_rcSummary"></div>
                         </div>
 
                         <!-- Property Value & Equity Growth -->
@@ -2539,130 +1983,7 @@
 
     </main>
 
-    <!-- Property Lookup Modal -->
-    <div class="ml-modal-overlay" id="ml_lookupModal" style="display:none" onclick="if(event.target===this)closePropertyLookup()">
-        <div class="ml-modal ml-modal--wide">
-            <div class="ml-modal-header">
-                <h3>Look Up Your Property Value</h3>
-                <button class="ml-modal-close" onclick="closePropertyLookup()" title="Close">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                </button>
-            </div>
-            <div class="ml-modal-body">
-                <p class="ml-modal-desc">Search your property address, check values on major property sites, then enter the value below.</p>
-
-                <!-- Address input with autocomplete -->
-                <div class="form-group">
-                    <label for="ml_lookupAddress">Property Address</label>
-                    <div class="ml-autocomplete-wrap">
-                        <div class="input-wrap">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-left:10px;color:var(--text-muted)"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                            <input type="text" id="ml_lookupAddress" placeholder="Start typing an Australian address..." autocomplete="off" style="padding:10px 12px">
-                            <button type="button" class="ml-addr-clear" id="ml_addrClear" style="display:none" onclick="clearLookupAddress()" title="Clear">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                            </button>
-                        </div>
-                        <div class="ml-ac-dropdown" id="ml_acDropdown"></div>
-                    </div>
-                    <small class="field-hint" id="ml_acHint">Type at least 3 characters for address suggestions</small>
-                </div>
-
-                <!-- Recent searches -->
-                <div class="ml-recent-searches" id="ml_recentSearches" style="display:none">
-                    <div class="ml-recent-header">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                        <span>Recent searches</span>
-                        <button type="button" class="ml-recent-clear" onclick="clearRecentSearches()">Clear all</button>
-                    </div>
-                    <div class="ml-recent-list" id="ml_recentList"></div>
-                </div>
-
-                <!-- Search buttons -->
-                <div class="ml-lookup-buttons-label">Search property sites</div>
-                <div class="ml-lookup-buttons">
-                    <button type="button" class="ml-lookup-btn ml-lookup-btn--domain" onclick="searchDomain()">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                        Domain.com.au
-                    </button>
-                    <button type="button" class="ml-lookup-btn ml-lookup-btn--rea" onclick="searchREA()">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                        realestate.com.au
-                    </button>
-                </div>
-                <div class="ml-paste-hint" id="ml_pasteHint" style="display:none">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>
-                    <span>Copy the estimated value from the site, then paste it below — we'll clean up the formatting automatically</span>
-                </div>
-
-                <div class="ml-lookup-divider"><span>enter the value you found</span></div>
-
-                <!-- Value source selector -->
-                <div class="ml-value-source">
-                    <label>Value source</label>
-                    <div class="ml-source-chips">
-                        <button type="button" class="ml-source-chip active" data-source="online" onclick="selectValueSource(this)">Online estimate</button>
-                        <button type="button" class="ml-source-chip" data-source="agent" onclick="selectValueSource(this)">Agent appraisal</button>
-                        <button type="button" class="ml-source-chip" data-source="bank" onclick="selectValueSource(this)">Bank valuation</button>
-                        <button type="button" class="ml-source-chip" data-source="sale" onclick="selectValueSource(this)">Recent sale</button>
-                    </div>
-                </div>
-
-                <!-- Value entry -->
-                <div class="form-group" style="margin-top:12px">
-                    <label for="ml_lookupValue">Actual Property Value</label>
-                    <div class="input-wrap">
-                        <span class="input-prefix">$</span>
-                        <input type="text" id="ml_lookupValue" inputmode="numeric" placeholder="Paste or type — e.g. $920,000 or 920000" autocomplete="off">
-                    </div>
-                    <small class="field-hint" id="ml_parsedHint" style="display:none"></small>
-                </div>
-
-                <!-- Confidence indicator -->
-                <div class="ml-confidence" id="ml_confidence" style="display:none">
-                    <div class="ml-confidence-bar">
-                        <div class="ml-confidence-fill" id="ml_confidenceFill"></div>
-                    </div>
-                    <div class="ml-confidence-labels">
-                        <span class="ml-confidence-diff" id="ml_confidenceDiff"></span>
-                        <span class="ml-confidence-text" id="ml_confidenceText"></span>
-                    </div>
-                </div>
-
-                <!-- Suburb median -->
-                <div class="ml-suburb-median" id="ml_suburbMedian" style="display:none">
-                    <div class="ml-suburb-icon">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-                    </div>
-                    <div class="ml-suburb-info">
-                        <div class="ml-suburb-name" id="ml_suburbName">—</div>
-                        <div class="ml-suburb-value">Median house price: <strong id="ml_suburbPrice">—</strong></div>
-                    </div>
-                </div>
-
-                <button type="button" class="calc-btn" style="width:100%;margin:12px 0 0" onclick="applyLookupValue()">
-                    Apply This Value
-                </button>
-            </div>
-        </div>
-    </div>
-
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <script>
-        // Google Places API key — replace with your own for address autocomplete
-        // Get a free key at https://console.cloud.google.com/apis/credentials
-        // Enable "Places API" and "Maps JavaScript API"
-        window.GOOGLE_PLACES_KEY = '';
-    </script>
     <script src="calculator.js"></script>
-    <script>
-        // Load Google Places if key is configured
-        if (window.GOOGLE_PLACES_KEY) {
-            const s = document.createElement('script');
-            s.src = 'https://maps.googleapis.com/maps/api/js?key=' + window.GOOGLE_PLACES_KEY + '&libraries=places&callback=initGooglePlaces';
-            s.async = true;
-            s.defer = true;
-            document.head.appendChild(s);
-        }
-    </script>
 </body>
 </html>

@@ -35,15 +35,9 @@ document.addEventListener('DOMContentLoaded', () => {
     buildComparisonGrid();
     initInvestorSliders();
     initPurchaseYearListeners();
-    initAcquisitionCostListeners();
     initBuyerTypeToggle();
     initBorrowingPowerListeners();
     initFHBStateListener();
-    initMyLoanTab();
-    initAddressAutocomplete();
-    initValueInput();
-    initRateChangesUI();
-    initOffsetUI();
     // Wire dep tab buttons
     document.querySelectorAll('.inv-dep-tab').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -52,7 +46,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (window._lastInvResult) renderDepreciationChart(window._lastInvResult, btn.dataset.dep);
         });
     });
-    initFormPersistence();
     setTimeout(() => calculateMortgage(true), 50);
 });
 
@@ -3388,164 +3381,12 @@ function initInvestorSliders() {
 
 // Call initInvestorSliders from DOMContentLoaded — patched into main init above
 
-// ── Historical average investment loan rates by year (approx. AU big-4 avg) ──
-const INV_HISTORICAL_RATES = {
-    2010: 7.36, 2011: 7.52, 2012: 6.78, 2013: 5.95, 2014: 5.74,
-    2015: 5.55, 2016: 5.25, 2017: 5.30, 2018: 5.36, 2019: 5.12,
-    2020: 4.50, 2021: 3.65, 2022: 4.85, 2023: 6.20, 2024: 6.49,
-    2025: 6.29, 2026: 6.10
-};
-
-function getHistoricalRate(year) {
-    if (INV_HISTORICAL_RATES[year] !== undefined) return INV_HISTORICAL_RATES[year];
-    const years = Object.keys(INV_HISTORICAL_RATES).map(Number).sort((a, b) => a - b);
-    if (year < years[0]) return INV_HISTORICAL_RATES[years[0]];
-    if (year > years[years.length - 1]) return INV_HISTORICAL_RATES[years[years.length - 1]];
-    return 6.29; // fallback
-}
-
-function onPurchaseYearChangeRate() {
-    const pyInput = document.getElementById('inv_purchaseYear');
-    const rateInput = document.getElementById('inv_interestRate');
-    const badge = document.getElementById('inv_rateBadge');
-    if (!pyInput || !rateInput) return;
-    const year = parseInt(pyInput.value) || 2025;
-    const rate = getHistoricalRate(year);
-    rateInput.value = rate.toFixed(2);
-    if (badge) {
-        const hasData = INV_HISTORICAL_RATES[year] !== undefined;
-        badge.textContent = hasData ? year + ' avg' : 'est.';
-        badge.title = hasData
-            ? 'Average AU investment loan rate for ' + year
-            : 'Estimated — no historical data for ' + year;
-    }
-}
-
-// ── Scheduled Rate Changes ──────────────────────────────────
-let invRateChangeCount = 0;
-
-function initRateChangesUI() {
-    const toggle = document.getElementById('inv_rateChangesToggle');
-    const group = document.getElementById('inv_rateChangesGroup');
-    if (!toggle || !group) return;
-    toggle.addEventListener('change', () => {
-        group.classList.toggle('hidden', !toggle.checked);
-        // Add a default empty row when first enabled
-        if (toggle.checked && document.querySelectorAll('#inv_rateChanges .ml-rate-row').length === 0) {
-            addInvRateChange();
-        }
-    });
-}
-
-function addInvRateChange(month, year, rate) {
-    invRateChangeCount++;
-    const id = invRateChangeCount;
-    const container = document.getElementById('inv_rateChanges');
-    if (!container) return;
-    const now = new Date();
-    const m = month !== undefined ? month : now.getMonth();
-    const y = year || now.getFullYear();
-    const r = rate || '';
-
-    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    const optionsHtml = months.map((name, i) =>
-        '<option value="' + i + '"' + (i === m ? ' selected' : '') + '>' + name + '</option>'
-    ).join('');
-
-    const row = document.createElement('div');
-    row.className = 'ml-rate-row';
-    row.id = 'inv_rc_' + id;
-    row.innerHTML =
-        '<div class="ml-rate-field"><label>Month</label><select>' + optionsHtml + '</select></div>' +
-        '<div class="ml-rate-field"><label>Year</label><input type="number" class="ml-rate-year" value="' + y + '" min="2020" max="2060" step="1"></div>' +
-        '<div class="ml-rate-field"><label>New Rate %</label><input type="number" class="ml-rate-val" value="' + r + '" min="0" max="20" step="0.01" placeholder="e.g. 5.89"></div>' +
-        '<button type="button" class="ml-rate-remove" onclick="removeInvRateChange(' + id + ')" title="Remove">' +
-            '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
-        '</button>';
-    container.appendChild(row);
-}
-
-function removeInvRateChange(id) {
-    const row = document.getElementById('inv_rc_' + id);
-    if (row) row.remove();
-}
-
-function getInvRateChanges() {
-    const rows = document.querySelectorAll('#inv_rateChanges .ml-rate-row');
-    const changes = [];
-    rows.forEach(row => {
-        const selects = row.querySelectorAll('select');
-        const inputs = row.querySelectorAll('input[type="number"]');
-        const month = parseInt(selects[0]?.value) || 0;
-        const year = parseInt(inputs[0]?.value) || 2025;
-        const rate = parseFloat(inputs[1]?.value);
-        if (!isNaN(rate) && rate > 0) {
-            changes.push({ month, year, rate });
-        }
-    });
-    changes.sort((a, b) => (a.year * 12 + a.month) - (b.year * 12 + b.month));
-    return changes;
-}
-
-function getRateForYear(baseRate, calYear) {
-    const changes = getInvRateChanges();
-    if (changes.length === 0) return baseRate;
-    let rate = baseRate;
-    for (const rc of changes) {
-        if (calYear >= rc.year) rate = rc.rate;
-    }
-    return rate;
-}
-
-function getRateForYearFromList(baseRate, calYear, changes) {
-    if (!changes || changes.length === 0) return baseRate;
-    let rate = baseRate;
-    for (const rc of changes) {
-        if (calYear >= rc.year) rate = rc.rate;
-    }
-    return rate;
-}
-
-// ── Offset Account ──────────────────────────────────────────
-function initOffsetUI() {
-    const toggle = document.getElementById('inv_offsetToggle');
-    const group = document.getElementById('inv_offsetGroup');
-    if (!toggle || !group) return;
-    toggle.addEventListener('change', () => {
-        group.classList.toggle('hidden', !toggle.checked);
-        updateOffsetPreview();
-    });
-    ['inv_offsetBalance', 'inv_offsetMonthly'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.addEventListener('input', updateOffsetPreview);
-    });
-    updateOffsetPreview();
-}
-
-function updateOffsetPreview() {
-    const preview = document.getElementById('inv_offsetPreview');
-    if (!preview) return;
-    const toggle = document.getElementById('inv_offsetToggle');
-    if (!toggle?.checked) { preview.innerHTML = ''; return; }
-    const startBal = parseFloat(document.getElementById('inv_offsetBalance')?.value) || 0;
-    const monthly = parseFloat(document.getElementById('inv_offsetMonthly')?.value) || 0;
-    const bal1yr = startBal + monthly * 12;
-    const bal5yr = startBal + monthly * 60;
-    const loan = parseFloat(document.getElementById('inv_loanAmount')?.value) || 0;
-    const pct1 = loan > 0 ? (bal1yr / loan * 100).toFixed(1) : '0.0';
-    const pct5 = loan > 0 ? Math.min(bal5yr / loan * 100, 100).toFixed(1) : '0.0';
-    preview.innerHTML = `<div class="inv-offset-stats">
-        <span>Yr 1: ${fmt(bal1yr)} <small>(${pct1}% of loan)</small></span>
-        <span>Yr 5: ${fmt(bal5yr)} <small>(${pct5}% of loan)</small></span>
-    </div>`;
-}
-
 function initPurchaseYearListeners() {
     const pyInput = document.getElementById('inv_purchaseYear');
     const ybInput = document.getElementById('inv_yearBuilt');
     const smInput = document.getElementById('inv_settlementMonth');
     if (!pyInput) return;
-    const update = () => { updatePurchaseYearContext(); onPurchaseYearChangeRate(); };
+    const update = () => updatePurchaseYearContext();
     pyInput.addEventListener('input', update);
     ybInput.addEventListener('input', update);
     smInput.addEventListener('change', update);
@@ -3585,56 +3426,8 @@ function updatePurchaseYearContext() {
     ).join('');
 }
 
-// ── Live acquisition cost preview (updates stamp duty + LMI as inputs change) ──
-function syncInvAcquisitionCosts() {
-    const state = document.getElementById('inv_state')?.value || 'NSW';
-    const price = parseFloat(document.getElementById('inv_purchasePrice')?.value) || 0;
-    const deposit = parseFloat(document.getElementById('inv_deposit')?.value) || 0;
-    const loan = Math.max(0, price - deposit);
-    const lvr = price > 0 ? (loan / price * 100) : 0;
-
-    // Stamp duty
-    const duty = estimateStampDuty(state, price);
-    const sdEl = document.getElementById('inv_stampDuty');
-    if (sdEl) sdEl.value = Math.round(duty);
-    const sdBadge = document.getElementById('inv_stampDutyState');
-    if (sdBadge) sdBadge.textContent = state;
-
-    // LMI
-    const lmi = estimateLMI(loan, price);
-    const lmiGroup = document.getElementById('inv_lmiGroup');
-    const lmiEl = document.getElementById('inv_lmiAmount');
-    const lmiBadge = document.getElementById('inv_lmiBadge');
-    if (lmiGroup) lmiGroup.style.display = lmi > 0 ? '' : 'none';
-    if (lmiEl) lmiEl.value = Math.round(lmi);
-    if (lmiBadge) lmiBadge.textContent = 'LVR ' + lvr.toFixed(1) + '%';
-
-    // Total preview
-    const conv = parseFloat(document.getElementById('inv_conveyancing')?.value) || 0;
-    const bldg = parseFloat(document.getElementById('inv_buildInspection')?.value) || 0;
-    const pest = parseFloat(document.getElementById('inv_pestInspection')?.value) || 0;
-    const lend = parseFloat(document.getElementById('inv_lenderFees')?.value) || 0;
-    const qs   = parseFloat(document.getElementById('inv_qsReport')?.value) || 0;
-    const oth  = parseFloat(document.getElementById('inv_otherAcqCosts')?.value) || 0;
-    const total = duty + lmi + conv + bldg + pest + lend + qs + oth;
-    const totalEl = document.getElementById('inv_acqTotalAmount');
-    if (totalEl) totalEl.textContent = fmt(total);
-}
-
-function initAcquisitionCostListeners() {
-    const triggers = ['inv_state', 'inv_purchasePrice', 'inv_deposit', 'inv_depositSlider',
-        'inv_conveyancing', 'inv_buildInspection', 'inv_pestInspection',
-        'inv_lenderFees', 'inv_qsReport', 'inv_otherAcqCosts'];
-    triggers.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.addEventListener(el.tagName === 'SELECT' ? 'change' : 'input', syncInvAcquisitionCosts);
-    });
-    syncInvAcquisitionCosts();
-}
-
 function calculateInvestor() {
     // ── Inputs ─────────────────────────────────────────────────
-    const state            = document.getElementById('inv_state')?.value || 'NSW';
     const purchasePrice    = parseFloat(document.getElementById('inv_purchasePrice').value)    || 0;
     const purchaseYear     = parseInt(document.getElementById('inv_purchaseYear').value)        || 2025;
     const settlementMonth  = parseInt(document.getElementById('inv_settlementMonth').value)     || 7;
@@ -3654,15 +3447,6 @@ function calculateInvestor() {
     const otherExpenses    = parseFloat(document.getElementById('inv_otherExpenses').value)    || 0;
     const marginalRatePct  = parseFloat(document.getElementById('inv_marginalRate').value)     || 37;
     const marginalRate     = marginalRatePct / 100;
-
-    // ── Offset account ─────────────────────────────────────────
-    const hasOffset     = document.getElementById('inv_offsetToggle')?.checked || false;
-    const offsetStart   = hasOffset ? (parseFloat(document.getElementById('inv_offsetBalance')?.value) || 0) : 0;
-    const offsetMonthly = hasOffset ? (parseFloat(document.getElementById('inv_offsetMonthly')?.value) || 0) : 0;
-
-    // ── Rate changes toggle ────────────────────────────────────
-    const hasRateChanges = document.getElementById('inv_rateChangesToggle')?.checked || false;
-    const invRateChangesList = hasRateChanges ? getInvRateChanges() : [];
 
     // ── Interest-only toggle ───────────────────────────────────
     const isIO       = document.getElementById('inv_interestOnlyToggle')?.checked || false;
@@ -3687,20 +3471,6 @@ function calculateInvestor() {
     const inflRepairs   = getInfl('inv_repairsInfl');
     const inflStrata    = getInfl('inv_strataInfl');
     const inflOther     = getInfl('inv_otherInfl');
-
-    // ── Acquisition costs ──────────────────────────────────────
-    const deposit        = purchasePrice - loanAmount;
-    const stampDuty      = estimateStampDuty(state, purchasePrice);
-    const lvr            = purchasePrice > 0 ? (loanAmount / purchasePrice) * 100 : 0;
-    const lmiAmount      = estimateLMI(loanAmount, purchasePrice);
-    const acqConveyancing   = parseFloat(document.getElementById('inv_conveyancing')?.value)   || 0;
-    const acqBuildInsp      = parseFloat(document.getElementById('inv_buildInspection')?.value) || 0;
-    const acqPestInsp       = parseFloat(document.getElementById('inv_pestInspection')?.value)  || 0;
-    const acqLenderFees     = parseFloat(document.getElementById('inv_lenderFees')?.value)      || 0;
-    const acqQsReport       = parseFloat(document.getElementById('inv_qsReport')?.value)        || 0;
-    const acqOtherCosts     = parseFloat(document.getElementById('inv_otherAcqCosts')?.value)   || 0;
-    const totalAcqCosts     = stampDuty + lmiAmount + acqConveyancing + acqBuildInsp + acqPestInsp + acqLenderFees + acqQsReport + acqOtherCosts;
-    const totalCashRequired = deposit + totalAcqCosts;
 
     // ── Purchase year / partial year ───────────────────────────
     const monthsInFirstYear = 13 - settlementMonth;
@@ -3727,9 +3497,7 @@ function calculateInvestor() {
     // ── Loan repayment calculation ─────────────────────────────
     const monthlyRate = (interestRate / 100) / 12;
     const totalMonths = loanTerm * 12;
-    // Effective loan balance for interest = loanAmount - offset (capped at loan)
-    const effectiveLoanYr1 = Math.max(0, loanAmount - offsetStart);
-    const annualInterest = effectiveLoanYr1 * (interestRate / 100);
+    const annualInterest = loanAmount * (interestRate / 100); // simple annual interest
 
     // IO period: interest-only for ioPeriod years, then P&I for remainder
     // For year-1 / display purposes we use full-year figures
@@ -3816,35 +3584,26 @@ function calculateInvestor() {
 
         // ── Repayment for this year (IO vs P&I switchover) ─────
         const yearNum = idx + 1; // 1-based holding year
-        // Rate for this year (may change if scheduled rate changes exist)
-        const yearRate = hasRateChanges ? getRateForYearFromList(interestRate, calYear, invRateChangesList) : interestRate;
-        const yearMonthlyRate = (yearRate / 100) / 12;
-        // Offset balance at start of this year (grows monthly)
-        const monthsElapsed = idx === 0 ? 0 : ((idx - 1) * 12 + monthsInFirstYear);
-        const offsetBalYear = Math.min(loanAmount, offsetStart + offsetMonthly * monthsElapsed);
-        const effectiveLoanYear = Math.max(0, loanAmount - offsetBalYear);
-        const yearAnnualInterest = effectiveLoanYear * (yearRate / 100);
-
         let repaymentYear, interestYear;
         if (!isIO) {
             // Full P&I from day one
-            const monthlyPI = yearMonthlyRate > 0
-                ? loanAmount * (yearMonthlyRate * Math.pow(1 + yearMonthlyRate, totalMonths)) / (Math.pow(1 + yearMonthlyRate, totalMonths) - 1)
+            const monthlyPI = monthlyRate > 0
+                ? loanAmount * (monthlyRate * Math.pow(1 + monthlyRate, totalMonths)) / (Math.pow(1 + monthlyRate, totalMonths) - 1)
                 : loanAmount / totalMonths;
             repaymentYear = monthlyPI * 12 * fraction;
-            interestYear  = yearAnnualInterest * fraction;
+            interestYear  = annualInterest * fraction; // approximate for P&L display
         } else if (yearNum <= ioPeriod) {
             // Interest-only period
-            repaymentYear = yearAnnualInterest * fraction;
-            interestYear  = yearAnnualInterest * fraction;
+            repaymentYear = annualInterest * fraction;
+            interestYear  = annualInterest * fraction;
         } else {
             // Switched to P&I
             const piMonths = (loanTerm - ioPeriod) * 12;
-            const monthlyPI = yearMonthlyRate > 0 && piMonths > 0
-                ? loanAmount * (yearMonthlyRate * Math.pow(1 + yearMonthlyRate, piMonths)) / (Math.pow(1 + yearMonthlyRate, piMonths) - 1)
+            const monthlyPI = monthlyRate > 0 && piMonths > 0
+                ? loanAmount * (monthlyRate * Math.pow(1 + monthlyRate, piMonths)) / (Math.pow(1 + monthlyRate, piMonths) - 1)
                 : loanAmount / Math.max(piMonths, 1);
             repaymentYear = monthlyPI * 12 * fraction;
-            interestYear  = yearAnnualInterest * fraction;
+            interestYear  = annualInterest * fraction; // interest decreasing but approx for display
         }
 
         // ── Depreciation ───────────────────────────────────────
@@ -3878,8 +3637,7 @@ function calculateInvestor() {
             rent, expenses, interest: interestYear, repayment: repaymentYear, netTax,
             // For inflation detail display
             councilYear, insuranceYear, mgmtFeeYear, repairsYear, strataYear, otherYear,
-            rentWeekly: rentYear, isIOYear: isIO && yearNum <= ioPeriod,
-            rateUsed: yearRate, offsetBal: offsetBalYear
+            rentWeekly: rentYear, isIOYear: isIO && yearNum <= ioPeriod
         });
     }
 
@@ -3905,13 +3663,7 @@ function calculateInvestor() {
         totalDiv43, totalDiv40, totalDep, totalTaxFromDep, yr1Dep,
         councilRates, insurance, repairs, strataFees, otherExpenses, annualLoanRepayment,
         holdingYears,
-        baseInflation, rentGrowthRate, propertyGrowthRate, inflCouncil, inflInsurance, inflRepairs, inflStrata, inflOther,
-        // Acquisition costs
-        state, deposit, stampDuty, lmiAmount, lvr,
-        acqConveyancing, acqBuildInsp, acqPestInsp, acqLenderFees, acqQsReport, acqOtherCosts,
-        totalAcqCosts, totalCashRequired,
-        // Offset & rate changes
-        hasOffset, offsetStart, offsetMonthly, hasRateChanges
+        baseInflation, rentGrowthRate, propertyGrowthRate, inflCouncil, inflInsurance, inflRepairs, inflStrata, inflOther
     };
 
     window._lastInvResult = result;
@@ -3956,94 +3708,43 @@ function displayInvestorResults(r) {
 
     document.getElementById('inv_taxRateBadge').textContent = r.marginalRatePct + '% marginal rate';
 
-    // ── Acquisition Costs & True ROI card ─────────────────────
-    const acqCard = document.getElementById('inv_acqCard');
-    if (acqCard && r.totalAcqCosts !== undefined) {
-        acqCard.style.display = '';
-        document.getElementById('inv_acqStateBadge').textContent = r.state;
-
-        // Government rows
-        const govRows = [
-            { label: 'Transfer Duty (' + r.state + ')', amount: r.stampDuty },
-        ];
-        if (r.lmiAmount > 0) {
-            govRows.push({ label: 'LMI Premium', amount: r.lmiAmount, note: 'LVR ' + r.lvr.toFixed(1) + '%' });
-        }
-        document.getElementById('inv_acqGovRows').innerHTML = govRows.map(row =>
-            '<div class="inv-acq-row"><span>' + row.label + (row.note ? ' <span class="inv-acq-note">' + row.note + '</span>' : '') + '</span><strong>' + fmt(row.amount) + '</strong></div>'
-        ).join('');
-
-        // Fee rows
-        const feeRows = [
-            { label: 'Conveyancing', amount: r.acqConveyancing },
-            { label: 'Building Inspection', amount: r.acqBuildInsp },
-            { label: 'Pest Inspection', amount: r.acqPestInsp },
-            { label: 'Lender Fees', amount: r.acqLenderFees },
-            { label: 'QS Report', amount: r.acqQsReport },
-            { label: 'Other / Buffer', amount: r.acqOtherCosts },
-        ].filter(row => row.amount > 0);
-        document.getElementById('inv_acqFeeRows').innerHTML = feeRows.map(row =>
-            '<div class="inv-acq-row"><span>' + row.label + '</span><strong>' + fmt(row.amount) + '</strong></div>'
-        ).join('');
-
-        document.getElementById('inv_acqFeesTotal').textContent = fmt(r.totalAcqCosts);
-        document.getElementById('inv_acqCashRequired').textContent = fmt(r.totalCashRequired);
-        document.getElementById('inv_acqCashSub').textContent = fmt(r.deposit) + ' deposit + ' + fmt(r.totalAcqCosts) + ' costs';
-        document.getElementById('inv_acqDeposit').textContent = fmt(r.deposit);
-        document.getElementById('inv_acqCosts').textContent = fmt(r.totalAcqCosts);
-        const costPct = r.purchasePrice > 0 ? (r.totalAcqCosts / r.purchasePrice * 100).toFixed(1) : '0.0';
-        document.getElementById('inv_acqCostPct').textContent = costPct + '%';
-
-        // True ROI: 5-year equity gain / total cash invested
-        const propVal5yr = r.purchasePrice * Math.pow(1 + r.propertyGrowthRate, 5);
-        // Approximate loan balance after 5 years
-        const monthlyRate = (r.interestRate / 100) / 12;
-        const totalMonths = r.loanTerm * 12;
-        let loanBal5 = r.loanAmount;
-        for (let yr = 0; yr < 5; yr++) {
-            const yearNum = yr + 1;
-            for (let m = 0; m < 12; m++) {
-                if (loanBal5 <= 0) break;
-                const intM = loanBal5 * monthlyRate;
-                let princM;
-                if (r.isIO && yearNum <= r.ioPeriod) {
-                    princM = 0;
-                } else {
-                    const piMo = r.isIO ? (r.loanTerm - r.ioPeriod) * 12 : totalMonths;
-                    const piPay = monthlyRate > 0 && piMo > 0
-                        ? r.loanAmount * (monthlyRate * Math.pow(1 + monthlyRate, piMo)) / (Math.pow(1 + monthlyRate, piMo) - 1)
-                        : r.loanAmount / piMo;
-                    princM = Math.min(piPay - intM, loanBal5);
-                }
-                loanBal5 = Math.max(0, loanBal5 - princM);
-            }
-        }
-        const equity5yr = propVal5yr - loanBal5;
-        const equityGain5yr = equity5yr - r.deposit;
-        const trueROI = r.totalCashRequired > 0 ? (equityGain5yr / r.totalCashRequired * 100) : 0;
-        const simpleROI = r.deposit > 0 ? (equityGain5yr / r.deposit * 100) : 0;
-        document.getElementById('inv_acqTrueROI').textContent = trueROI.toFixed(1) + '%';
-        document.getElementById('inv_acqSimpleROI').textContent = simpleROI.toFixed(1) + '%';
-    }
-
     // Store result for frequency toggle re-render
     window._lastInvResult = r;
 
-    // ── Populate year selector ────────────────────────────────
-    const yearSel = document.getElementById('inv_cfYearSelect');
-    if (yearSel && r.depSchedule.length) {
-        const prev = parseInt(yearSel.value) || 1;
-        yearSel.innerHTML = r.depSchedule.map(row =>
-            `<option value="${row.year}"${row.year === 1 ? ' selected' : ''}>Year ${row.year} (${row.calYear})</option>`
-        ).join('');
-        // Restore previous selection if still valid
-        if (prev > 1 && prev <= r.depSchedule.length) yearSel.value = prev;
-    }
+    // ── Cash flow rows (annual by default) ────────────────────
+    renderCashFlowRows(r, 'annual');
 
-    // ── Cash flow rows (annual by default, year 1) ────────────
-    const activeFreq = document.querySelector('.inv-freq-btn.active')?.dataset.freq || 'annual';
-    const activeYear = parseInt(yearSel?.value) || 1;
-    renderCashFlowRows(r, activeFreq, activeYear);
+    // ── Tax benefit rows (annual) ──────────────────────────────
+    const firstYrDep = r.depSchedule[0]?.total || 0;
+    const taxRows = [
+        { label: 'Gross Rental Income',         val: r.annualGrossRent,  cls: 'income'    },
+        { label: 'Less: Loan Interest',          val: -r.annualInterest,  cls: 'deduction' },
+        { label: 'Less: Council Rates',          val: -r.councilRates,    cls: 'deduction' },
+        { label: 'Less: Insurance',              val: -r.insurance,       cls: 'deduction' },
+        { label: 'Less: Property Management',    val: -r.mgmtFee,         cls: 'deduction' },
+        { label: 'Less: Repairs & Maintenance',  val: -r.repairs,         cls: 'deduction' },
+    ];
+    if (r.strataFees > 0)    taxRows.push({ label: 'Less: Strata',  val: -r.strataFees,    cls: 'deduction' });
+    if (r.otherExpenses > 0) taxRows.push({ label: 'Less: Other',   val: -r.otherExpenses, cls: 'deduction' });
+    taxRows.push({ label: 'Less: Depreciation (Yr 1, ' + r.monthsInFirstYear + ' mo)', val: -firstYrDep, cls: 'deduction' });
+
+    document.getElementById('inv_taxRows').innerHTML = taxRows.map(row =>
+        `<div class="inv-row ${row.cls}">
+            <span>${row.label}</span>
+            <strong>${fmtSigned(row.val)}</strong>
+        </div>`
+    ).join('');
+
+    const taxLossWithDep    = r.annualNetTaxableIncome - firstYrDep;
+    const taxBenefitWithDep = Math.abs(Math.min(0, taxLossWithDep)) * r.marginalRate;
+    document.getElementById('inv_taxTotal').innerHTML = `
+        <span class="total-label">Net Taxable Income (${r.purchaseYear})</span>
+        <span class="${taxLossWithDep < 0 ? 'total-negative' : 'total-positive'}">${fmt(taxLossWithDep)}</span>
+    `;
+    document.getElementById('inv_afterTax').innerHTML = `
+        <span>Annual Tax Benefit incl. depreciation</span>
+        <strong>${fmt(taxBenefitWithDep)}</strong>
+    `;
 
     // ── Depreciation summary stats ─────────────────────────────
     const div43EndYear = r.purchaseYear + r.div43YearsRemaining - 1;
@@ -4122,37 +3823,21 @@ function monthName(n) {
 // ── Cash flow rows renderer (supports annual / weekly toggle) ─
 let inv_equityChartInstance = null;
 
-function renderCashFlowRows(r, freq, yearNum) {
-    const isAnnual = freq === 'annual';
-    const unit = isAnnual ? '/yr' : '/mo';
+function renderCashFlowRows(r, freq) {
+    const isAnnual = freq !== 'weekly';
+    const div = isAnnual ? 1 : 52;
+    const unit = isAnnual ? '/yr' : '/wk';
 
-    // Get per-year data from depSchedule (fall back to year 1)
-    const yrIdx = Math.max(0, (yearNum || 1) - 1);
-    const yr = r.depSchedule[yrIdx] || r.depSchedule[0];
-    const fraction = yr ? yr.fraction : 1;
-    const months = Math.round(fraction * 12);
-    // For monthly view, divide actual amounts by the number of months in that period
-    const div = isAnnual ? 1 : months;
+    const annualRepayment = r.annualLoanRepayment;
+    const annualInterest  = r.annualInterest;
+    const mgmtAnnual      = r.mgmtFee;
+    const councilAnnual   = r.councilRates;
+    const insuranceAnnual = r.insurance;
+    const repairsAnnual   = r.repairs;
+    const strataAnnual    = r.strataFees;
+    const otherAnnual     = r.otherExpenses;
 
-    // Use actual figures from depSchedule (already partial for year 1)
-    const rentActual      = yr ? yr.rent : r.annualGrossRent;
-    const repaymentActual = yr ? yr.repayment : r.annualLoanRepayment;
-    const interestActual  = yr ? yr.interest : r.annualInterest;
-    const councilActual   = yr ? yr.councilYear : r.councilRates;
-    const insuranceActual = yr ? yr.insuranceYear : r.insurance;
-    const mgmtActual      = yr ? yr.mgmtFeeYear : r.mgmtFee;
-    const repairsActual   = yr ? yr.repairsYear : r.repairs;
-    const strataActual    = yr ? yr.strataYear : r.strataFees;
-    const otherActual     = yr ? yr.otherYear : r.otherExpenses;
-    const rateUsed        = yr ? yr.rateUsed : r.interestRate;
-    const offsetBal       = yr ? yr.offsetBal : 0;
-    const isIOYear        = yr ? yr.isIOYear : r.isIO;
-
-    const expensesActual  = councilActual + insuranceActual + mgmtActual + repairsActual + strataActual + otherActual;
-    const netCashFlow = rentActual - expensesActual - repaymentActual;
-
-    // Period label for partial years
-    const periodNote = fraction < 1 ? ' (' + months + ' mo)' : '';
+    const annualNetCashFlow = r.annualGrossRent - r.annualCashExpenses - annualRepayment;
 
     // Inflation tags
     const pctLabel = (rate) => rate > 0
@@ -4160,39 +3845,28 @@ function renderCashFlowRows(r, freq, yearNum) {
     const rentGrowthLabel = r.rentGrowthRate > 0
         ? ' <span class="inv-infl-tag inv-infl-tag--green">+' + (r.rentGrowthRate * 100).toFixed(1) + '% p.a.</span>' : '';
 
-    const loanRepayLabel = isIOYear
+    const loanRepayLabel = r.isIO
         ? 'Loan Repayment <span class="inv-loan-type-tag inv-loan-type-tag--io">IO ' + r.ioPeriod + 'yr</span>'
         : 'Loan Repayment <span class="inv-loan-type-tag inv-loan-type-tag--pi">P&amp;I</span>';
-    const interestCompLabel = isIOYear ? '↳ Interest Only (full)' : '↳ Interest Component';
-
-    // Rate badge if different from base rate
-    const rateNote = rateUsed !== r.interestRate
-        ? ' <span class="inv-infl-tag">' + rateUsed.toFixed(2) + '%</span>' : '';
+    const interestCompLabel = r.isIO ? '↳ Interest Only (full)' : '↳ Interest Component';
 
     const cfRows = [
-        { label: 'Gross Rent (effective)' + rentGrowthLabel, val:  rentActual / div,      cls: 'income',  html: true },
-        { label: loanRepayLabel + rateNote,                   val: -repaymentActual / div,  cls: 'expense', html: true },
-        { label: interestCompLabel,                           val: -interestActual / div,   cls: 'indent',  html: true },
-        { label: 'Council Rates'       + pctLabel(r.inflCouncil),   val: -councilActual / div,   cls: 'expense', html: true },
-        { label: 'Landlord Insurance'  + pctLabel(r.inflInsurance), val: -insuranceActual / div, cls: 'expense', html: true },
-        { label: 'Property Management',                       val: -mgmtActual / div,      cls: 'expense', html: false },
-        { label: 'Repairs &amp; Maintenance' + pctLabel(r.inflRepairs), val: -repairsActual / div, cls: 'expense', html: true },
+        { label: 'Gross Rent (effective)' + rentGrowthLabel, val:  r.annualGrossRent / div,  cls: 'income',  html: true },
+        { label: loanRepayLabel,                              val: -annualRepayment  / div,   cls: 'expense', html: true },
+        { label: interestCompLabel,                           val: -annualInterest   / div,   cls: 'indent',  html: true },
+        { label: 'Council Rates'       + pctLabel(r.inflCouncil),   val: -councilAnnual   / div, cls: 'expense', html: true },
+        { label: 'Landlord Insurance'  + pctLabel(r.inflInsurance), val: -insuranceAnnual / div, cls: 'expense', html: true },
+        { label: 'Property Management',                       val: -mgmtAnnual      / div,   cls: 'expense', html: false },
+        { label: 'Repairs &amp; Maintenance' + pctLabel(r.inflRepairs), val: -repairsAnnual / div, cls: 'expense', html: true },
     ];
-    if (strataActual > 0)  cfRows.push({ label: 'Strata / Body Corporate' + pctLabel(r.inflStrata), val: -strataActual / div, cls: 'expense', html: true });
-    if (otherActual > 0)   cfRows.push({ label: 'Other' + pctLabel(r.inflOther), val: -otherActual / div, cls: 'expense', html: true });
+    if (r.strataFees > 0)    cfRows.push({ label: 'Strata / Body Corporate' + pctLabel(r.inflStrata), val: -strataAnnual / div, cls: 'expense', html: true });
+    if (r.otherExpenses > 0) cfRows.push({ label: 'Other' + pctLabel(r.inflOther), val: -otherAnnual / div, cls: 'expense', html: true });
 
     let switchNote = '';
-    if (r.isIO && r.weeklyPIRepayment && isIOYear) {
-        const piDisplay = isAnnual ? fmt(r.weeklyPIRepayment * 52) + '/yr' : fmt(r.weeklyPIRepayment * 52 / 12) + '/mo';
+    if (r.isIO && r.weeklyPIRepayment) {
+        const piDisplay = isAnnual ? fmt(r.weeklyPIRepayment * 52) + '/yr' : fmt(r.weeklyPIRepayment) + '/wk';
         switchNote = `<div class="inv-io-switch-note">
             After IO period (${r.purchaseYear + r.ioPeriod}): repayment switches to P&amp;I — ${piDisplay}
-        </div>`;
-    }
-    if (r.hasOffset && offsetBal > 0) {
-        const intSaved = offsetBal * (rateUsed / 100);
-        const savedDisplay = isAnnual ? fmt(intSaved) + '/yr' : fmt(intSaved / 12) + '/mo';
-        switchNote += `<div class="inv-io-switch-note inv-offset-note">
-            Offset ${fmt(offsetBal)} — saves ~${savedDisplay} interest in yr ${yearNum || 1}
         </div>`;
     }
 
@@ -4203,247 +3877,17 @@ function renderCashFlowRows(r, freq, yearNum) {
         </div>`
     ).join('') + switchNote;
 
-    const cfNet = netCashFlow / div;
-    const totalLabel = isAnnual
-        ? (fraction < 1 ? `Net Cash Flow${periodNote}` : 'Net Annual Cash Flow')
-        : 'Net Monthly Cash Flow';
+    const cfNet = annualNetCashFlow / div;
     document.getElementById('inv_cashFlowTotal').innerHTML = `
-        <span class="total-label">${totalLabel}</span>
+        <span class="total-label">Net ${isAnnual ? 'Annual' : 'Weekly'} Cash Flow</span>
         <span class="${cfNet >= 0 ? 'total-positive' : 'total-negative'}">${fmtSigned(cfNet)}${unit}</span>
     `;
-
-    // Also update tax benefit when called from year/freq change
-    renderTaxBenefitRows(r, yearNum || 1);
-
-    // ── Rate change impact chart ──────────────────────────────
-    const rcChartCard = document.getElementById('inv_rcChartCard');
-    if (r.hasRateChanges && r.depSchedule.length > 1) {
-        // Build periods: group consecutive years with the same rate
-        const periods = [];
-        let prevRate = null;
-        for (const row of r.depSchedule) {
-            if (row.rateUsed !== prevRate) {
-                periods.push({
-                    rate: row.rateUsed,
-                    fromYear: row.calYear,
-                    toYear: row.calYear,
-                    interest: row.interest / row.fraction,
-                    rent: row.rent / row.fraction,
-                    expenses: row.expenses / row.fraction,
-                    repayment: row.repayment / row.fraction
-                });
-                prevRate = row.rateUsed;
-            } else {
-                const p = periods[periods.length - 1];
-                p.toYear = row.calYear;
-                if (row.fraction === 1) {
-                    p.interest = row.interest;
-                    p.rent = row.rent;
-                    p.expenses = row.expenses;
-                    p.repayment = row.repayment;
-                }
-            }
-        }
-        if (periods.length > 1) {
-            if (rcChartCard) rcChartCard.style.display = '';
-            renderRateImpactChart(periods, div, unit);
-        } else {
-            if (rcChartCard) rcChartCard.style.display = 'none';
-        }
-    } else {
-        if (rcChartCard) rcChartCard.style.display = 'none';
-    }
-}
-
-let inv_rcChartInstance = null;
-
-function renderRateImpactChart(periods, div, unit) {
-    const canvas = document.getElementById('inv_rcChart');
-    const wrap = canvas?.parentElement;
-    const summaryEl = document.getElementById('inv_rcSummary');
-    if (!canvas || !wrap) return;
-    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-    const textColor = isDark ? '#8CA4BB' : '#8896A9';
-    const gridColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
-
-    // Compact height: ~38px per bar + 28px padding
-    const chartHeight = Math.max(100, periods.length * 38 + 28);
-    wrap.style.height = chartHeight + 'px';
-
-    const labels = periods.map(p =>
-        p.fromYear === p.toYear ? p.rate.toFixed(2) + '% (' + p.fromYear + ')'
-        : p.rate.toFixed(2) + '% (' + p.fromYear + '–' + p.toYear + ')'
-    );
-    const values = periods.map(p => (p.rent - p.expenses - p.repayment) / div);
-
-    const posColor = isDark ? 'rgba(52,211,153,0.85)' : 'rgba(5,150,105,0.85)';
-    const negColor = isDark ? 'rgba(248,113,113,0.85)' : 'rgba(239,68,68,0.8)';
-    const posBorder = isDark ? '#34d399' : '#059669';
-    const negBorder = isDark ? '#f87171' : '#ef4444';
-
-    const colors = values.map(v => v >= 0 ? posColor : negColor);
-    const borderColors = values.map(v => v >= 0 ? posBorder : negBorder);
-
-    if (inv_rcChartInstance) inv_rcChartInstance.destroy();
-    inv_rcChartInstance = new Chart(canvas, {
-        type: 'bar',
-        data: {
-            labels,
-            datasets: [{
-                data: values,
-                backgroundColor: colors,
-                borderColor: borderColors,
-                borderWidth: 1.5,
-                borderRadius: 5,
-                borderSkipped: false,
-                barPercentage: 0.5,
-                categoryPercentage: 0.85
-            }]
-        },
-        options: {
-            indexAxis: 'y',
-            responsive: true,
-            maintainAspectRatio: false,
-            layout: { padding: { top: 2, bottom: 2, left: 0, right: 55 } },
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    backgroundColor: isDark ? '#1e293b' : '#fff',
-                    titleColor: isDark ? '#e2e8f0' : '#1e293b',
-                    bodyColor: isDark ? '#cbd5e1' : '#475569',
-                    borderColor: isDark ? '#334155' : '#e2e8f0',
-                    borderWidth: 1,
-                    cornerRadius: 8,
-                    padding: 10,
-                    displayColors: false,
-                    callbacks: {
-                        title: ctx => ctx[0].label,
-                        label: ctx => 'Net Cash Flow: ' + fmtSigned(ctx.raw) + unit
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    grid: { color: gridColor, drawBorder: false },
-                    ticks: {
-                        color: textColor,
-                        font: { size: 10, family: 'DM Sans' },
-                        callback: v => (v >= 0 ? '+$' : '-$') + Math.abs(Math.round(v)).toLocaleString(),
-                        maxTicksLimit: 5
-                    },
-                    border: { display: false }
-                },
-                y: {
-                    grid: { display: false },
-                    ticks: {
-                        color: textColor,
-                        font: { size: 11, weight: '600', family: 'DM Sans' },
-                        padding: 4
-                    },
-                    border: { display: false }
-                }
-            },
-            animation: {
-                onComplete: function() {
-                    // Draw value labels on each bar
-                    const ctx = this.ctx;
-                    const meta = this.getDatasetMeta(0);
-                    ctx.save();
-                    ctx.font = '600 11px DM Sans';
-                    ctx.textBaseline = 'middle';
-                    meta.data.forEach((bar, i) => {
-                        const v = values[i];
-                        const label = fmtSigned(v) + unit;
-                        const x = bar.x + (v >= 0 ? 6 : -6);
-                        const align = v >= 0 ? 'left' : 'right';
-                        ctx.fillStyle = v >= 0 ? posBorder : negBorder;
-                        ctx.textAlign = align;
-                        ctx.fillText(label, x, bar.y);
-                    });
-                    ctx.restore();
-                }
-            }
-        }
-    });
-
-    // Summary line
-    if (summaryEl) {
-        const minVal = Math.min(...values);
-        const maxVal = Math.max(...values);
-        const minP = periods[values.indexOf(minVal)];
-        const maxP = periods[values.indexOf(maxVal)];
-        summaryEl.innerHTML = `
-            <span class="inv-rc-sum-item neg">Worst: <strong>${fmtSigned(minVal)}${unit}</strong> at ${minP.rate.toFixed(2)}%</span>
-            <span class="inv-rc-sum-divider">|</span>
-            <span class="inv-rc-sum-item pos">Best: <strong>${fmtSigned(maxVal)}${unit}</strong> at ${maxP.rate.toFixed(2)}%</span>
-        `;
-    }
 }
 
 function switchCFFreq(freq, btn) {
     document.querySelectorAll('.inv-freq-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    const yearNum = parseInt(document.getElementById('inv_cfYearSelect')?.value) || 1;
-    if (window._lastInvResult) renderCashFlowRows(window._lastInvResult, freq, yearNum);
-}
-
-function onCFYearChange() {
-    const freq = document.querySelector('.inv-freq-btn.active')?.dataset.freq || 'annual';
-    const yearNum = parseInt(document.getElementById('inv_cfYearSelect')?.value) || 1;
-    if (window._lastInvResult) renderCashFlowRows(window._lastInvResult, freq, yearNum);
-}
-
-function renderTaxBenefitRows(r, yearNum) {
-    const yrIdx = Math.max(0, (yearNum || 1) - 1);
-    const yr = r.depSchedule[yrIdx] || r.depSchedule[0];
-    if (!yr) return;
-
-    // Use actual figures from depSchedule (already partial for year 1)
-    const rentActual      = yr.rent;
-    const interestActual  = yr.interest;
-    const councilActual   = yr.councilYear;
-    const insuranceActual = yr.insuranceYear;
-    const mgmtActual      = yr.mgmtFeeYear;
-    const repairsActual   = yr.repairsYear;
-    const strataActual    = yr.strataYear;
-    const otherActual     = yr.otherYear;
-    const depTotal        = yr.total;
-    const months          = Math.round(yr.fraction * 12);
-    const periodNote      = yr.fraction < 1 ? ` (${months} mo)` : '';
-    const depLabel        = yr.fraction < 1
-        ? `Less: Depreciation (Yr ${yearNum}, ${months} mo)`
-        : `Less: Depreciation (Yr ${yearNum})`;
-
-    const taxRows = [
-        { label: 'Gross Rental Income' + periodNote, val: rentActual,       cls: 'income'    },
-        { label: 'Less: Loan Interest',               val: -interestActual,  cls: 'deduction' },
-        { label: 'Less: Council Rates',               val: -councilActual,   cls: 'deduction' },
-        { label: 'Less: Insurance',                   val: -insuranceActual, cls: 'deduction' },
-        { label: 'Less: Property Management',         val: -mgmtActual,     cls: 'deduction' },
-        { label: 'Less: Repairs & Maintenance',       val: -repairsActual,  cls: 'deduction' },
-    ];
-    if (strataActual > 0) taxRows.push({ label: 'Less: Strata',  val: -strataActual, cls: 'deduction' });
-    if (otherActual > 0)  taxRows.push({ label: 'Less: Other',   val: -otherActual,  cls: 'deduction' });
-    taxRows.push({ label: depLabel, val: -depTotal, cls: 'deduction' });
-
-    document.getElementById('inv_taxRows').innerHTML = taxRows.map(row =>
-        `<div class="inv-row ${row.cls}">
-            <span>${row.label}</span>
-            <strong>${fmtSigned(row.val)}</strong>
-        </div>`
-    ).join('');
-
-    const netTaxable = rentActual - interestActual - councilActual - insuranceActual - mgmtActual - repairsActual - strataActual - otherActual - depTotal;
-    const taxBenefit = Math.abs(Math.min(0, netTaxable)) * r.marginalRate;
-    const incomeLabel = yr.fraction < 1 ? `Net Taxable Income (${yr.calYear}, ${months} mo)` : `Net Taxable Income (${yr.calYear})`;
-    document.getElementById('inv_taxTotal').innerHTML = `
-        <span class="total-label">${incomeLabel}</span>
-        <span class="${netTaxable < 0 ? 'total-negative' : 'total-positive'}">${fmt(netTaxable)}</span>
-    `;
-    document.getElementById('inv_afterTax').innerHTML = `
-        <span>${yr.fraction < 1 ? 'Tax Benefit (' + months + ' mo) incl. depreciation' : 'Annual Tax Benefit incl. depreciation'}</span>
-        <strong>${fmt(taxBenefit)}</strong>
-    `;
+    if (window._lastInvResult) renderCashFlowRows(window._lastInvResult, freq);
 }
 
 // ── Property Value & Equity Chart ────────────────────────────
@@ -4706,1198 +4150,4 @@ function fmt(amount) {
     return new Intl.NumberFormat('en-AU', {
         style: 'currency', currency: 'AUD', minimumFractionDigits: 0, maximumFractionDigits: 0
     }).format(amount);
-}
-
-// ═══════════════════════════════════════════════════════════════
-// MY LOAN TRACKER
-// ═══════════════════════════════════════════════════════════════
-
-let mlChartInstance = null;
-let mlRateChangeCount = 0;
-
-// ─── Init (called from DOMContentLoaded) ──────────────────────
-function initMyLoanTab() {
-    const ioToggle = document.getElementById('ml_ioToggle');
-    const ioGroup = document.getElementById('ml_ioGroup');
-    const ioSlider = document.getElementById('ml_ioSlider');
-    const ioBadge = document.getElementById('ml_ioBadge');
-    if (ioToggle && ioGroup) {
-        ioToggle.addEventListener('change', () => ioGroup.classList.toggle('hidden', !ioToggle.checked));
-    }
-    if (ioSlider && ioBadge) {
-        ioSlider.addEventListener('input', () => {
-            ioBadge.textContent = ioSlider.value + ' yrs';
-            updateSliderFill(ioSlider);
-        });
-        updateSliderFill(ioSlider);
-    }
-
-    // Offset toggle
-    const offsetToggle = document.getElementById('ml_offsetToggle');
-    const offsetGroup = document.getElementById('ml_offsetGroup');
-    if (offsetToggle && offsetGroup) {
-        offsetToggle.addEventListener('change', () => {
-            offsetGroup.classList.toggle('hidden', !offsetToggle.checked);
-            updateMLOffsetPreview();
-        });
-    }
-    ['ml_offset', 'ml_offsetMonthly'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.addEventListener('input', updateMLOffsetPreview);
-    });
-    updateMLOffsetPreview();
-}
-
-function updateMLOffsetPreview() {
-    const preview = document.getElementById('ml_offsetPreview');
-    if (!preview) return;
-    const toggle = document.getElementById('ml_offsetToggle');
-    if (!toggle?.checked) { preview.innerHTML = ''; return; }
-    const startBal = parseFloat(document.getElementById('ml_offset')?.value) || 0;
-    const monthly = parseFloat(document.getElementById('ml_offsetMonthly')?.value) || 0;
-    const bal1yr = startBal + monthly * 12;
-    const bal5yr = startBal + monthly * 60;
-    const loan = parseFloat(document.getElementById('ml_originalAmount')?.value) || 0;
-    const pct1 = loan > 0 ? (bal1yr / loan * 100).toFixed(1) : '0.0';
-    const pct5 = loan > 0 ? Math.min(bal5yr / loan * 100, 100).toFixed(1) : '0.0';
-    preview.innerHTML = `<div class="inv-offset-stats">
-        <span>Yr 1: ${fmt(bal1yr)} <small>(${pct1}% of loan)</small></span>
-        <span>Yr 5: ${fmt(bal5yr)} <small>(${pct5}% of loan)</small></span>
-    </div>`;
-}
-
-// ─── Rate Change Rows ─────────────────────────────────────────
-function addRateChange(month, year, rate) {
-    mlRateChangeCount++;
-    const id = mlRateChangeCount;
-    const container = document.getElementById('ml_rateChanges');
-    const now = new Date();
-    const m = month !== undefined ? month : now.getMonth();
-    const y = year || now.getFullYear();
-    const r = rate || '';
-
-    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    const optionsHtml = months.map((name, i) =>
-        '<option value="' + i + '"' + (i === m ? ' selected' : '') + '>' + name + '</option>'
-    ).join('');
-
-    const row = document.createElement('div');
-    row.className = 'ml-rate-row';
-    row.id = 'ml_rc_' + id;
-    row.innerHTML =
-        '<div class="ml-rate-field"><label>Month</label><select>' + optionsHtml + '</select></div>' +
-        '<div class="ml-rate-field"><label>Year</label><input type="number" class="ml-rate-year" value="' + y + '" min="1990" max="2030" step="1"></div>' +
-        '<div class="ml-rate-field"><label>New Rate %</label><input type="number" class="ml-rate-val" value="' + r + '" min="0" max="20" step="0.01" placeholder="e.g. 6.29"></div>' +
-        '<button type="button" class="ml-rate-remove" onclick="removeRateChange(' + id + ')" title="Remove">' +
-            '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
-        '</button>';
-    container.appendChild(row);
-}
-
-function removeRateChange(id) {
-    const row = document.getElementById('ml_rc_' + id);
-    if (row) row.remove();
-}
-
-// ─── Gather Rate Changes ──────────────────────────────────────
-function getRateChanges() {
-    const rows = document.querySelectorAll('#ml_rateChanges .ml-rate-row');
-    const changes = [];
-    rows.forEach(row => {
-        const selects = row.querySelectorAll('select');
-        const inputs = row.querySelectorAll('input[type="number"]');
-        const month = parseInt(selects[0]?.value) || 0;
-        const year = parseInt(inputs[0]?.value) || 2024;
-        const rate = parseFloat(inputs[1]?.value);
-        if (!isNaN(rate) && rate > 0) {
-            changes.push({ month, year, rate });
-        }
-    });
-    // Sort chronologically
-    changes.sort((a, b) => (a.year * 12 + a.month) - (b.year * 12 + b.month));
-    return changes;
-}
-
-// ─── Core Calculation ─────────────────────────────────────────
-function calculateMyLoan() {
-    const startMonth = parseInt(document.getElementById('ml_startMonth').value) || 0;
-    const startYear = parseInt(document.getElementById('ml_startYear').value) || 2021;
-    const originalAmount = parseFloat(document.getElementById('ml_originalAmount').value) || 0;
-    const propertyPrice = parseFloat(document.getElementById('ml_propertyPrice').value) || 0;
-    const originalRate = parseFloat(document.getElementById('ml_originalRate').value) || 0;
-    const loanTermYears = parseInt(document.getElementById('ml_loanTerm').value) || 30;
-    const freq = document.getElementById('ml_frequency').value;
-    const isIO = document.getElementById('ml_ioToggle')?.checked || false;
-    const ioPeriodYears = isIO ? (parseInt(document.getElementById('ml_ioSlider')?.value) || 5) : 0;
-    const offset = (document.getElementById('ml_offsetToggle')?.checked)
-        ? (parseFloat(document.getElementById('ml_offset').value) || 0) : 0;
-    const offsetMonthly = (document.getElementById('ml_offsetToggle')?.checked)
-        ? (parseFloat(document.getElementById('ml_offsetMonthly')?.value) || 0) : 0;
-    const extraRepay = parseFloat(document.getElementById('ml_extraRepay').value) || 0;
-
-    const periodsPerYear = freq === 'weekly' ? 52 : freq === 'fortnightly' ? 26 : 12;
-    const totalPeriods = loanTermYears * periodsPerYear;
-
-    // Build rate timeline: [{fromPeriod, rate}]
-    const rateChanges = getRateChanges();
-    const rateTimeline = [{ month: startMonth, year: startYear, rate: originalRate, period: 0 }];
-
-    rateChanges.forEach(rc => {
-        const periodOffset = ((rc.year - startYear) * 12 + (rc.month - startMonth)) * (periodsPerYear / 12);
-        if (periodOffset > 0 && periodOffset < totalPeriods) {
-            rateTimeline.push({ month: rc.month, year: rc.year, rate: rc.rate, period: Math.round(periodOffset) });
-        }
-    });
-
-    // Now marker
-    const now = new Date();
-    const nowPeriodFloat = ((now.getFullYear() - startYear) * 12 + (now.getMonth() - startMonth)) * (periodsPerYear / 12);
-    const nowPeriod = Math.max(0, Math.round(nowPeriodFloat));
-
-    // IO periods
-    const ioPeriods = ioPeriodYears * periodsPerYear;
-
-    // Walk through every period
-    let balance = originalAmount;
-    let totalInterestPaid = 0;
-    let totalPrincipalPaid = 0;
-    let pastInterest = 0;
-    let pastPrincipal = 0;
-    let currentRateIdx = 0;
-    let currentRate = originalRate;
-    let runningOffset = offset; // grows by offsetMonthly each month from nowPeriod
-    const monthsPerPeriod = 12 / periodsPerYear; // 1 for monthly, ~0.46 for fortnightly, ~0.23 for weekly
-
-    const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    const yearlyData = []; // for chart
-    const schedule = []; // for table
-    let prevRepayment = 0;
-
-    // Helper: calc P&I repayment for remaining balance/rate/periods
-    function calcRepayment(bal, periodicRate, remainingPeriods) {
-        if (periodicRate <= 0) return remainingPeriods > 0 ? bal / remainingPeriods : 0;
-        return bal * (periodicRate * Math.pow(1 + periodicRate, remainingPeriods)) / (Math.pow(1 + periodicRate, remainingPeriods) - 1);
-    }
-
-    let repayment = 0;
-    let repaymentNeedsRecalc = true;
-
-    // Track rate at each period for rate-change detection
-    const rateAtPeriod = [];
-
-    for (let p = 0; p <= totalPeriods; p++) {
-        // Check for rate change
-        while (currentRateIdx + 1 < rateTimeline.length && p >= rateTimeline[currentRateIdx + 1].period) {
-            currentRateIdx++;
-            currentRate = rateTimeline[currentRateIdx].rate;
-            repaymentNeedsRecalc = true;
-        }
-
-        const periodicRate = (currentRate / 100) / periodsPerYear;
-        const inIO = p < ioPeriods;
-
-        if (repaymentNeedsRecalc && !inIO) {
-            const remainingPeriods = totalPeriods - Math.max(p, ioPeriods);
-            repayment = calcRepayment(balance, periodicRate, remainingPeriods);
-            repaymentNeedsRecalc = false;
-        }
-
-        rateAtPeriod[p] = currentRate;
-
-        // Record yearly data for chart (every periodsPerYear periods)
-        if (p % periodsPerYear === 0) {
-            const calYear = startYear + Math.floor(p / periodsPerYear);
-            const calMonth = startMonth + Math.round((p % periodsPerYear) * (12 / periodsPerYear));
-            yearlyData.push({
-                label: p === 0 ? MONTHS[startMonth] + ' ' + startYear : String(calYear),
-                balance: Math.max(0, balance),
-                isPast: p <= nowPeriod,
-                period: p
-            });
-        }
-
-        // Record yearly schedule rows
-        if (p > 0 && p % periodsPerYear === 0) {
-            const yr = p / periodsPerYear;
-            const calYear = startYear + yr;
-            const isPast = p <= nowPeriod;
-            const isNowYear = p > nowPeriod && (p - periodsPerYear) <= nowPeriod;
-            schedule.push({
-                label: 'Year ' + yr + ' (' + calYear + ')',
-                rate: currentRate,
-                payment: repayment,
-                balance: Math.max(0, balance),
-                isPast,
-                isNowYear,
-                rateChanged: rateAtPeriod[p] !== rateAtPeriod[p - 1]
-            });
-        }
-
-        if (p >= totalPeriods || balance <= 0.01) break;
-
-        // Calculate period
-        const effectiveBalance = Math.max(0, balance - (p >= nowPeriod ? runningOffset : 0));
-        const interest = effectiveBalance * periodicRate;
-        let principal;
-
-        if (inIO) {
-            principal = 0;
-            repayment = interest;
-        } else {
-            const actualPayment = (p >= nowPeriod) ? repayment + extraRepay : repayment;
-            principal = Math.min(balance, actualPayment - interest);
-        }
-
-        totalInterestPaid += interest;
-        totalPrincipalPaid += principal;
-        if (p < nowPeriod) {
-            pastInterest += interest;
-            pastPrincipal += principal;
-        }
-
-        balance = Math.max(0, balance - principal);
-
-        // Grow offset balance (from now onward)
-        if (p >= nowPeriod && offsetMonthly > 0) {
-            runningOffset += offsetMonthly * monthsPerPeriod;
-        }
-    }
-
-    // Current rate (last known)
-    const curRate = currentRate;
-    const curPeriodicRate = (curRate / 100) / periodsPerYear;
-    const remainingPeriodsFromNow = totalPeriods - nowPeriod;
-    const curRepayment = calcRepayment(Math.max(0, originalAmount - pastPrincipal), curPeriodicRate, remainingPeriodsFromNow > 0 ? remainingPeriodsFromNow : 1);
-    const origPeriodicRate = (originalRate / 100) / periodsPerYear;
-    const origRepayment = calcRepayment(originalAmount, origPeriodicRate, totalPeriods);
-
-    const currentBalance = Math.max(0, originalAmount - pastPrincipal);
-    const futureInterest = totalInterestPaid - pastInterest;
-    const elapsedMonths = (now.getFullYear() - startYear) * 12 + (now.getMonth() - startMonth);
-    const remainingMonths = Math.max(0, loanTermYears * 12 - elapsedMonths);
-    const payoffDate = new Date(now.getFullYear(), now.getMonth() + remainingMonths, 1);
-
-    // Auto-calculate current property value using Australian median growth (~6.5% p.a.)
-    const AU_ANNUAL_GROWTH = 0.065;
-    const elapsedYearsForGrowth = Math.max(elapsedMonths / 12, 0);
-    const autoCurrentValue = propertyPrice > 0 ? propertyPrice * Math.pow(1 + AU_ANNUAL_GROWTH, elapsedYearsForGrowth) : 0;
-    // Allow user override
-    const overrideVal = parseFloat(document.getElementById('ml_valOverrideInput')?.value) || 0;
-    const currentValue = overrideVal > 0 ? overrideVal : autoCurrentValue;
-    const isOverridden = overrideVal > 0;
-
-    // Display results
-    displayMyLoanResults({
-        originalAmount, propertyPrice, originalRate, curRate,
-        currentBalance, pastInterest, pastPrincipal,
-        futureInterest, totalInterestPaid,
-        origRepayment, curRepayment,
-        elapsedMonths, remainingMonths, payoffDate,
-        loanTermYears, periodsPerYear, freq,
-        rateTimeline, nowPeriod, yearlyData, schedule,
-        currentValue, isOverridden, AU_ANNUAL_GROWTH
-    });
-}
-
-// ─── Display Results ──────────────────────────────────────────
-function displayMyLoanResults(r) {
-    const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-
-    // Metrics strip
-    document.getElementById('ml_balance').textContent = fmt(r.currentBalance);
-    document.getElementById('ml_interestPaid').textContent = fmt(r.pastInterest);
-    document.getElementById('ml_principalPaid').textContent = fmt(r.pastPrincipal);
-
-    const paidPct = r.originalAmount > 0 ? (r.pastPrincipal / r.originalAmount * 100).toFixed(1) : 0;
-    document.getElementById('ml_principalPaidSub').textContent = paidPct + '% of original loan';
-
-    if (r.propertyPrice > 0) {
-        const equity = r.propertyPrice - r.currentBalance;
-        const lvr = (r.currentBalance / r.propertyPrice * 100).toFixed(1);
-        document.getElementById('ml_equity').textContent = fmt(equity);
-        document.getElementById('ml_equitySub').textContent = 'LVR ' + lvr + '%';
-    } else {
-        document.getElementById('ml_equity').textContent = fmt(r.pastPrincipal);
-        document.getElementById('ml_equitySub').textContent = 'principal repaid';
-    }
-
-    // Loan Progress card
-    document.getElementById('ml_origLoan').textContent = fmt(r.originalAmount);
-    document.getElementById('ml_paidOff').textContent = fmt(r.pastPrincipal);
-    document.getElementById('ml_remaining').textContent = fmt(r.currentBalance);
-
-    const elYrs = Math.floor(r.elapsedMonths / 12);
-    const elMo = r.elapsedMonths % 12;
-    document.getElementById('ml_elapsed').textContent = (elYrs > 0 ? elYrs + 'y ' : '') + elMo + 'mo';
-    const remYrs = Math.floor(r.remainingMonths / 12);
-    const remMo = r.remainingMonths % 12;
-    document.getElementById('ml_remainingTerm').textContent = (remYrs > 0 ? remYrs + 'y ' : '') + remMo + 'mo';
-
-    // Then vs Now card
-    document.getElementById('ml_origRate').textContent = r.originalRate.toFixed(2) + '%';
-    document.getElementById('ml_curRate').textContent = r.curRate.toFixed(2) + '%';
-    document.getElementById('ml_origRepay').textContent = fmt(r.origRepayment);
-    document.getElementById('ml_curRepay').textContent = fmt(r.curRepayment);
-    const repayDiff = r.curRepayment - r.origRepayment;
-    const changeEl = document.getElementById('ml_repayChange');
-    changeEl.textContent = fmtSigned(repayDiff) + '/mo';
-    changeEl.style.color = repayDiff > 0 ? 'var(--red)' : 'var(--emerald-dark)';
-
-    // Future Outlook card
-    document.getElementById('ml_payoffDate').textContent = MONTHS[r.payoffDate.getMonth()] + ' ' + r.payoffDate.getFullYear();
-    document.getElementById('ml_futureInterest').textContent = fmt(r.futureInterest);
-    document.getElementById('ml_totalInterest').textContent = fmt(r.totalInterestPaid);
-    document.getElementById('ml_totalCost').textContent = fmt(r.originalAmount + r.totalInterestPaid);
-
-    // Property Valuation card
-    const valCard = document.getElementById('ml_valuationCard');
-    if (r.currentValue > 0 && r.propertyPrice > 0) {
-        valCard.style.display = '';
-        const capitalGrowth = r.currentValue - r.propertyPrice;
-        const elapsedYears = Math.max(r.elapsedMonths / 12, 0.1);
-        const actualGrowthRate = (Math.pow(r.currentValue / r.propertyPrice, 1 / elapsedYears) - 1) * 100;
-        const currentLVR = (r.currentBalance / r.currentValue * 100);
-        const totalEquity = r.currentValue - r.currentBalance;
-        const usableEquity = Math.max(0, r.currentValue * 0.8 - r.currentBalance);
-
-        document.getElementById('ml_valPurchase').textContent = fmt(r.propertyPrice);
-        document.getElementById('ml_valCurrent').textContent = fmt(r.currentValue);
-
-        const growthEl = document.getElementById('ml_valGrowth');
-        growthEl.textContent = fmtSigned(capitalGrowth);
-        growthEl.style.color = capitalGrowth >= 0 ? 'var(--emerald-dark)' : 'var(--red)';
-
-        const growthRateEl = document.getElementById('ml_valGrowthRate');
-        if (r.isOverridden) {
-            growthRateEl.textContent = actualGrowthRate.toFixed(1) + '% p.a. (actual)';
-        } else {
-            growthRateEl.textContent = (r.AU_ANNUAL_GROWTH * 100).toFixed(1) + '% p.a. (AU median)';
-        }
-        growthRateEl.style.color = actualGrowthRate >= 0 ? 'var(--emerald-dark)' : 'var(--red)';
-
-        const lvrEl = document.getElementById('ml_valLVR');
-        lvrEl.textContent = currentLVR.toFixed(1) + '%';
-        lvrEl.style.color = currentLVR > 80 ? 'var(--red)' : currentLVR > 60 ? 'var(--amber)' : 'var(--emerald-dark)';
-
-        document.getElementById('ml_valUsableEquity').textContent = fmt(usableEquity);
-        document.getElementById('ml_valTotalEquity').textContent = fmt(totalEquity);
-
-        // Update the equity metric tile to use property-based equity
-        document.getElementById('ml_equity').textContent = fmt(totalEquity);
-        document.getElementById('ml_equitySub').textContent = 'LVR ' + currentLVR.toFixed(1) + '%';
-    } else {
-        valCard.style.display = 'none';
-    }
-
-    // Rate timeline
-    renderRateTimeline(r);
-
-    // Chart
-    renderMyLoanChart(r);
-
-    // Schedule
-    renderMyLoanSchedule(r);
-
-    // Show results
-    document.getElementById('ml_empty').style.display = 'none';
-    document.getElementById('ml_results').classList.remove('hidden');
-}
-
-// ─── Rate Timeline ────────────────────────────────────────────
-function renderRateTimeline(r) {
-    const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    const container = document.getElementById('ml_rateTimeline');
-    const now = new Date();
-
-    let html = '';
-    r.rateTimeline.forEach((entry, i) => {
-        const isPast = entry.period <= r.nowPeriod;
-        const dateStr = MONTHS[entry.month] + ' ' + entry.year;
-        const periodicRate = (entry.rate / 100) / r.periodsPerYear;
-        const remainingAtPoint = (r.loanTermYears * r.periodsPerYear) - entry.period;
-        // Rough repayment at that point (simplified — uses original amount for first, balance estimate for rest)
-        const repayEst = i === 0
-            ? r.origRepayment
-            : r.originalAmount * (periodicRate * Math.pow(1 + periodicRate, remainingAtPoint)) / (Math.pow(1 + periodicRate, remainingAtPoint) - 1);
-
-        let changeHtml = '';
-        if (i > 0) {
-            const diff = entry.rate - r.rateTimeline[i - 1].rate;
-            const cls = diff > 0 ? 'ml-tl-change--up' : 'ml-tl-change--down';
-            changeHtml = '<span class="ml-tl-change ' + cls + '">' + (diff > 0 ? '▲' : '▼') + ' ' + Math.abs(diff).toFixed(2) + '%</span>';
-        }
-
-        const dotCls = isPast ? 'ml-tl-dot--past' : (entry.period <= r.nowPeriod + r.periodsPerYear ? 'ml-tl-dot--now' : '');
-        const tagHtml = i === 0 ? '<span class="ml-tl-tag ml-tl-tag--past">Start</span>' : '';
-
-        html += '<div class="ml-tl-item">' +
-            '<div class="ml-tl-dot ' + dotCls + '"></div>' +
-            '<span class="ml-tl-date">' + dateStr + '</span>' +
-            tagHtml +
-            '<span class="ml-tl-rate">' + entry.rate.toFixed(2) + '% p.a.</span>' +
-            changeHtml +
-            '<span class="ml-tl-repay">' + fmt(repayEst) + '/mo</span>' +
-        '</div>';
-    });
-
-    // Add "Today" marker
-    html += '<div class="ml-tl-item">' +
-        '<div class="ml-tl-dot ml-tl-dot--now"></div>' +
-        '<span class="ml-tl-date">' + MONTHS[now.getMonth()] + ' ' + now.getFullYear() + '</span>' +
-        '<span class="ml-tl-tag">Today</span>' +
-        '<span class="ml-tl-rate">' + r.curRate.toFixed(2) + '% p.a.</span>' +
-        '<span class="ml-tl-repay">' + fmt(r.curRepayment) + '/mo</span>' +
-    '</div>';
-
-    container.innerHTML = html;
-}
-
-// ─── Balance Chart ────────────────────────────────────────────
-function renderMyLoanChart(r) {
-    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-    const textColor = isDark ? '#8CA4BB' : '#8896A9';
-    const gridColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
-
-    const labels = r.yearlyData.map(d => d.label);
-    const balances = r.yearlyData.map(d => Math.round(d.balance));
-    const todayIdx = r.yearlyData.findIndex(d => !d.isPast);
-
-    // Split into past and future segments
-    const pastData = balances.map((v, i) => r.yearlyData[i].isPast ? v : null);
-    const futureData = balances.map((v, i) => {
-        if (!r.yearlyData[i].isPast) return v;
-        // Bridge: include last past point in future line
-        if (i < balances.length - 1 && !r.yearlyData[i + 1].isPast) return v;
-        return null;
-    });
-
-    const ctx = document.getElementById('ml_balanceChart');
-    if (mlChartInstance) mlChartInstance.destroy();
-    mlChartInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels,
-            datasets: [
-                {
-                    label: 'Actual (past)',
-                    data: pastData,
-                    borderColor: '#2563EB',
-                    backgroundColor: isDark ? 'rgba(37,99,235,0.15)' : 'rgba(37,99,235,0.08)',
-                    fill: true, tension: 0.4, pointRadius: 2, borderWidth: 2.5,
-                    spanGaps: false
-                },
-                {
-                    label: 'Projected (future)',
-                    data: futureData,
-                    borderColor: '#00C896',
-                    backgroundColor: isDark ? 'rgba(0,200,150,0.12)' : 'rgba(0,200,150,0.06)',
-                    fill: true, tension: 0.4, pointRadius: 2, borderWidth: 2,
-                    borderDash: [6, 3],
-                    spanGaps: false
-                }
-            ]
-        },
-        options: {
-            responsive: true, maintainAspectRatio: true,
-            interaction: { mode: 'index', intersect: false },
-            plugins: {
-                legend: { display: true, position: 'top', labels: { color: textColor, font: { family: 'DM Sans', size: 12 }, boxWidth: 12, padding: 16, usePointStyle: true, pointStyle: 'circle' } },
-                tooltip: { mode: 'index', intersect: false, callbacks: { label: c => '  ' + c.dataset.label + ': ' + fmt(c.raw) } },
-                annotation: todayIdx >= 0 ? {
-                    annotations: { todayLine: { type: 'line', xMin: todayIdx, xMax: todayIdx, borderColor: '#00C896', borderWidth: 2, borderDash: [4, 3], label: { display: true, content: 'Today', position: 'start', backgroundColor: '#00C896', color: '#fff', font: { size: 10, weight: 'bold' } } } }
-                } : {}
-            },
-            scales: {
-                x: { ticks: { color: textColor, maxTicksLimit: 12, font: { family: 'DM Sans', size: 11 } }, grid: { color: gridColor } },
-                y: { ticks: { color: textColor, callback: v => '$' + (v >= 1000000 ? (v/1000000).toFixed(1) + 'M' : v >= 1000 ? (v/1000).toFixed(0) + 'k' : v), font: { family: 'DM Sans', size: 11 } }, grid: { color: gridColor } }
-            },
-            animation: { duration: 600 }
-        }
-    });
-}
-
-// ─── Schedule Table ───────────────────────────────────────────
-function renderMyLoanSchedule(r) {
-    const tbody = document.getElementById('ml_scheduleBody');
-    let html = '';
-    r.schedule.forEach(row => {
-        const cls = row.isNowYear ? 'ml-today-row' : (row.isPast ? 'ml-past-row' : '');
-        const statusHtml = row.isNowYear ? '<span class="ml-today-marker">Now</span>'
-            : row.rateChanged ? '<span class="ml-rate-change-marker">Rate Δ</span>'
-            : (row.isPast ? '✓' : '—');
-        html += '<tr class="' + cls + '">' +
-            '<td>' + row.label + '</td>' +
-            '<td>' + row.rate.toFixed(2) + '%</td>' +
-            '<td>' + fmt(row.payment) + '</td>' +
-            '<td>' + fmt(row.payment > 0 ? row.payment - (row.balance * (row.rate / 100 / 12)) : 0) + '</td>' +
-            '<td>' + fmt(row.balance * (row.rate / 100 / 12) * 12) + '</td>' +
-            '<td>' + fmt(row.balance) + '</td>' +
-            '<td>' + statusHtml + '</td>' +
-        '</tr>';
-    });
-    tbody.innerHTML = html;
-}
-
-// ─── CSV Export ───────────────────────────────────────────────
-function mlExportCSV() {
-    const table = document.getElementById('ml_scheduleTable');
-    if (!table) return;
-    let csv = '';
-    table.querySelectorAll('tr').forEach(row => {
-        const cells = [];
-        row.querySelectorAll('th, td').forEach(cell => cells.push('"' + cell.textContent.replace(/"/g, '""') + '"'));
-        csv += cells.join(',') + '\n';
-    });
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = 'my-loan-tracker.csv'; a.click();
-    URL.revokeObjectURL(url);
-}
-
-// ─── Reset ────────────────────────────────────────────────────
-function resetMyLoan() {
-    document.getElementById('ml_startMonth').value = '0';
-    document.getElementById('ml_startYear').value = '2021';
-    document.getElementById('ml_originalAmount').value = '600000';
-    document.getElementById('ml_propertyPrice').value = '750000';
-    document.getElementById('ml_originalRate').value = '2.49';
-    document.getElementById('ml_loanTerm').value = '30';
-    document.getElementById('ml_frequency').value = 'monthly';
-    document.getElementById('ml_offset').value = '0';
-    document.getElementById('ml_offsetMonthly').value = '0';
-    document.getElementById('ml_extraRepay').value = '0';
-    const overrideInput = document.getElementById('ml_valOverrideInput');
-    if (overrideInput) overrideInput.value = '';
-    const ioToggle = document.getElementById('ml_ioToggle');
-    if (ioToggle) { ioToggle.checked = false; document.getElementById('ml_ioGroup')?.classList.add('hidden'); }
-    const offsetToggle = document.getElementById('ml_offsetToggle');
-    if (offsetToggle) { offsetToggle.checked = false; document.getElementById('ml_offsetGroup')?.classList.add('hidden'); }
-    document.getElementById('ml_rateChanges').innerHTML = '';
-    mlRateChangeCount = 0;
-    document.getElementById('ml_results').classList.add('hidden');
-    document.getElementById('ml_empty').style.display = '';
-    updateMLOffsetPreview();
-}
-
-// ─── Property Lookup Modal ────────────────────────────────────
-function openPropertyLookup() {
-    document.getElementById('ml_lookupModal').style.display = '';
-    const input = document.getElementById('ml_lookupAddress');
-    input.focus();
-    renderRecentSearches();
-    updateConfidenceIndicator();
-}
-
-function closePropertyLookup() {
-    document.getElementById('ml_lookupModal').style.display = 'none';
-}
-
-function clearLookupAddress() {
-    const input = document.getElementById('ml_lookupAddress');
-    input.value = '';
-    input.focus();
-    document.getElementById('ml_addrClear').style.display = 'none';
-    document.getElementById('ml_acDropdown').classList.remove('active');
-    document.getElementById('ml_suburbMedian').style.display = 'none';
-}
-
-// ── Search buttons ────────────────────────────────────────────
-function getSearchAddress() {
-    const addr = document.getElementById('ml_lookupAddress').value.trim();
-    if (!addr) { document.getElementById('ml_lookupAddress').focus(); return null; }
-    saveRecentSearch(addr);
-    // Show paste hint after opening a search site
-    const hint = document.getElementById('ml_pasteHint');
-    if (hint) hint.style.display = '';
-    return addr;
-}
-
-function searchDomain() {
-    const addr = getSearchAddress();
-    if (!addr) return;
-    const slug = addr.toLowerCase().replace(/[,]/g, '').replace(/\s+/g, '-');
-    window.open('https://www.domain.com.au/property-profile/' + encodeURIComponent(slug), '_blank');
-}
-
-function searchREA() {
-    const addr = getSearchAddress();
-    if (!addr) return;
-    window.open('https://www.realestate.com.au/sold/in-' + encodeURIComponent(addr) + '/list-1', '_blank');
-}
-
-// ── Value source chips ────────────────────────────────────────
-let mlValueSource = 'online';
-function selectValueSource(btn) {
-    document.querySelectorAll('.ml-source-chip').forEach(c => c.classList.remove('active'));
-    btn.classList.add('active');
-    mlValueSource = btn.dataset.source;
-}
-
-// ── Parse pasted property values ──────────────────────────────
-function parsePastedValue(raw) {
-    if (!raw) return 0;
-    let s = raw.trim();
-
-    // Handle "M" / "m" suffix: "$1.04M" → 1040000
-    const mMatch = s.match(/^\$?\s*([\d,.]+)\s*[Mm]$/);
-    if (mMatch) return Math.round(parseFloat(mMatch[1].replace(/,/g, '')) * 1000000);
-
-    // Handle "K" / "k" suffix: "$920K" → 920000
-    const kMatch = s.match(/^\$?\s*([\d,.]+)\s*[Kk]$/);
-    if (kMatch) return Math.round(parseFloat(kMatch[1].replace(/,/g, '')) * 1000);
-
-    // Strip $, commas, spaces, "AUD", "AU" prefixes
-    s = s.replace(/^(AUD|AU)?\s*\$?\s*/, '').replace(/,/g, '').replace(/\s/g, '');
-
-    // Handle range like "$900,000 - $1,000,000" → take midpoint
-    const rangeMatch = raw.replace(/,/g, '').match(/\$?\s*(\d+)\s*[-–—to]+\s*\$?\s*(\d+)/);
-    if (rangeMatch) {
-        const low = parseFloat(rangeMatch[1]);
-        const high = parseFloat(rangeMatch[2]);
-        if (low > 0 && high > 0) return Math.round((low + high) / 2);
-    }
-
-    const num = parseFloat(s);
-    return isNaN(num) ? 0 : Math.round(num);
-}
-
-function initValueInput() {
-    const input = document.getElementById('ml_lookupValue');
-    const hint = document.getElementById('ml_parsedHint');
-    if (!input) return;
-
-    const handleValue = () => {
-        const raw = input.value;
-        const parsed = parsePastedValue(raw);
-        if (parsed > 0 && hint) {
-            hint.style.display = '';
-            hint.textContent = 'Parsed: ' + fmt(parsed);
-            hint.style.color = 'var(--emerald-dark)';
-        } else if (hint) {
-            hint.style.display = raw.trim() ? '' : 'none';
-            if (raw.trim()) {
-                hint.textContent = 'Could not parse a value';
-                hint.style.color = 'var(--red)';
-            }
-        }
-        updateConfidenceIndicator();
-    };
-
-    input.addEventListener('input', handleValue);
-    input.addEventListener('paste', () => {
-        // Delay to let paste content populate the input
-        setTimeout(handleValue, 50);
-    });
-}
-
-// ── Apply value ───────────────────────────────────────────────
-function applyLookupValue() {
-    const raw = document.getElementById('ml_lookupValue').value;
-    const val = parsePastedValue(raw);
-    if (val > 0) {
-        const overrideInput = document.getElementById('ml_valOverrideInput');
-        if (overrideInput) overrideInput.value = val;
-        // Save the source and value
-        const addr = document.getElementById('ml_lookupAddress').value.trim();
-        if (addr) saveRecentSearch(addr, val, mlValueSource);
-        closePropertyLookup();
-        calculateMyLoan();
-    } else {
-        // Shake the input to indicate error
-        const input = document.getElementById('ml_lookupValue');
-        input.style.animation = 'none';
-        input.offsetHeight; // trigger reflow
-        input.style.animation = 'shake 0.4s ease';
-        input.focus();
-    }
-}
-
-function applyValuationOverride() {
-    calculateMyLoan();
-}
-
-// ── Confidence indicator ──────────────────────────────────────
-function updateConfidenceIndicator() {
-    const raw = document.getElementById('ml_lookupValue')?.value || '';
-    const lookupVal = parsePastedValue(raw);
-    const container = document.getElementById('ml_confidence');
-    if (!container) return;
-
-    // Get the estimated value from the My Loan results
-    const estEl = document.getElementById('ml_valCurrent');
-    const estText = estEl ? estEl.textContent.replace(/[^0-9.]/g, '') : '';
-    const estVal = parseFloat(estText) || 0;
-
-    if (lookupVal <= 0 || estVal <= 0) {
-        container.style.display = 'none';
-        return;
-    }
-
-    container.style.display = '';
-    const diff = ((lookupVal - estVal) / estVal) * 100;
-    const absDiff = Math.abs(diff);
-
-    // Confidence: <5% = high, 5-15% = medium, >15% = low
-    let pct, color, text;
-    if (absDiff <= 5) {
-        pct = 90; color = 'var(--emerald)'; text = 'High confidence — close to estimated value';
-    } else if (absDiff <= 15) {
-        pct = 55; color = 'var(--amber)'; text = 'Moderate — ' + (absDiff).toFixed(1) + '% from estimate';
-    } else {
-        pct = 25; color = 'var(--red)'; text = 'Large variance — verify with multiple sources';
-    }
-
-    document.getElementById('ml_confidenceFill').style.width = pct + '%';
-    document.getElementById('ml_confidenceFill').style.background = color;
-    document.getElementById('ml_confidenceDiff').textContent = (diff >= 0 ? '+' : '') + diff.toFixed(1) + '% vs estimate';
-    document.getElementById('ml_confidenceDiff').style.color = color;
-    document.getElementById('ml_confidenceText').textContent = text;
-}
-
-// ── Suburb median prices (AU capital city medians, indicative) ─
-const SUBURB_MEDIANS = {
-    'sydney': 1420000, 'melbourne': 935000, 'brisbane': 850000, 'perth': 730000,
-    'adelaide': 750000, 'hobart': 660000, 'canberra': 870000, 'darwin': 530000,
-    'gold coast': 880000, 'sunshine coast': 920000, 'newcastle': 810000,
-    'wollongong': 870000, 'geelong': 720000, 'townsville': 420000, 'cairns': 480000,
-    'toowoomba': 520000, 'ballarat': 530000, 'bendigo': 510000, 'launceston': 520000,
-    'mackay': 430000, 'rockhampton': 370000, 'bundaberg': 440000, 'hervey bay': 530000,
-    'wagga wagga': 480000, 'albury': 520000, 'tamworth': 440000, 'orange': 530000,
-    'dubbo': 420000, 'bathurst': 510000, 'mildura': 390000, 'shepparton': 430000,
-};
-
-function detectSuburb(address) {
-    const lower = address.toLowerCase();
-    // Try to extract suburb/city from address
-    // Common patterns: "123 Street, Suburb, State" or "123 Street Suburb State"
-    const parts = lower.split(/[,]+/).map(p => p.trim());
-
-    // Check each part against known suburbs/cities
-    for (const part of parts) {
-        for (const [city, median] of Object.entries(SUBURB_MEDIANS)) {
-            if (part.includes(city)) return { name: city, median };
-        }
-    }
-    // Also check the full string
-    for (const [city, median] of Object.entries(SUBURB_MEDIANS)) {
-        if (lower.includes(city)) return { name: city, median };
-    }
-    return null;
-}
-
-function updateSuburbMedian(address) {
-    const container = document.getElementById('ml_suburbMedian');
-    if (!container) return;
-
-    const match = detectSuburb(address);
-    if (match) {
-        container.style.display = '';
-        document.getElementById('ml_suburbName').textContent =
-            match.name.charAt(0).toUpperCase() + match.name.slice(1) + ' region';
-        document.getElementById('ml_suburbPrice').textContent = fmt(match.median);
-    } else {
-        container.style.display = 'none';
-    }
-}
-
-// ── Recent searches (localStorage) ────────────────────────────
-const ML_RECENT_KEY = 'ml_recentSearches';
-const ML_RECENT_MAX = 5;
-
-function getRecentSearches() {
-    try {
-        return JSON.parse(localStorage.getItem(ML_RECENT_KEY)) || [];
-    } catch { return []; }
-}
-
-function saveRecentSearch(address, value, source) {
-    const searches = getRecentSearches();
-    // Remove duplicate
-    const filtered = searches.filter(s => s.address !== address);
-    filtered.unshift({ address, value: value || null, source: source || null, ts: Date.now() });
-    // Keep max
-    localStorage.setItem(ML_RECENT_KEY, JSON.stringify(filtered.slice(0, ML_RECENT_MAX)));
-}
-
-function clearRecentSearches() {
-    localStorage.removeItem(ML_RECENT_KEY);
-    renderRecentSearches();
-}
-
-function renderRecentSearches() {
-    const container = document.getElementById('ml_recentSearches');
-    const list = document.getElementById('ml_recentList');
-    if (!container || !list) return;
-
-    const searches = getRecentSearches();
-    if (searches.length === 0) {
-        container.style.display = 'none';
-        return;
-    }
-
-    container.style.display = '';
-    list.innerHTML = searches.map(s => {
-        const valueStr = s.value ? ' — ' + fmt(s.value) : '';
-        const sourceStr = s.source ? ' <span class="ml-recent-source">' + s.source + '</span>' : '';
-        return '<button type="button" class="ml-recent-item" onclick="useRecentSearch(\'' + s.address.replace(/'/g, "\\'") + '\')">' +
-            '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' +
-            '<span class="ml-recent-addr">' + s.address + valueStr + sourceStr + '</span>' +
-            '</button>';
-    }).join('');
-}
-
-function useRecentSearch(address) {
-    document.getElementById('ml_lookupAddress').value = address;
-    document.getElementById('ml_addrClear').style.display = '';
-    updateSuburbMedian(address);
-}
-
-// ── Free address autocomplete (Australian addresses via Nominatim/OSM) ──
-let mlAcDebounce = null;
-
-function initAddressAutocomplete() {
-    const input = document.getElementById('ml_lookupAddress');
-    const dropdown = document.getElementById('ml_acDropdown');
-    const clearBtn = document.getElementById('ml_addrClear');
-    if (!input || !dropdown) return;
-
-    input.addEventListener('input', () => {
-        const q = input.value.trim();
-        clearBtn.style.display = q.length > 0 ? '' : 'none';
-
-        if (q.length < 3) {
-            dropdown.classList.remove('active');
-            return;
-        }
-
-        clearTimeout(mlAcDebounce);
-        mlAcDebounce = setTimeout(() => fetchAddressSuggestions(q), 300);
-    });
-
-    input.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            dropdown.classList.remove('active');
-        }
-        if (e.key === 'ArrowDown' && dropdown.classList.contains('active')) {
-            e.preventDefault();
-            const first = dropdown.querySelector('.ml-ac-item');
-            if (first) first.focus();
-        }
-    });
-
-    // Close dropdown on outside click
-    document.addEventListener('click', (e) => {
-        if (!e.target.closest('.ml-autocomplete-wrap')) {
-            dropdown.classList.remove('active');
-        }
-    });
-
-    // Value input — update confidence on change
-    const valInput = document.getElementById('ml_lookupValue');
-    if (valInput) {
-        valInput.addEventListener('input', updateConfidenceIndicator);
-    }
-}
-
-function fetchAddressSuggestions(query) {
-    const dropdown = document.getElementById('ml_acDropdown');
-
-    // Use Google Places if available, otherwise fall back to Nominatim (OSM)
-    if (window.google?.maps?.places?.AutocompleteService) {
-        fetchGoogleSuggestions(query);
-        return;
-    }
-
-    // Extract street number from user's typed query (e.g. "42 smith st" → "42")
-    const typedNumberMatch = query.match(/^(\d+[a-zA-Z]?)\s+/);
-    const typedNumber = typedNumberMatch ? typedNumberMatch[1] : '';
-
-    // Nominatim (OpenStreetMap) — free, no API key, AU-restricted
-    const url = 'https://nominatim.openstreetmap.org/search?format=json&countrycodes=au&addressdetails=1&limit=5&q=' + encodeURIComponent(query);
-
-    fetch(url, { headers: { 'Accept-Language': 'en' } })
-        .then(r => r.json())
-        .then(results => {
-            if (!results || results.length === 0) {
-                dropdown.innerHTML = '<div class="ml-ac-empty">No addresses found</div>';
-                dropdown.classList.add('active');
-                return;
-            }
-
-            dropdown.innerHTML = results.map(r => {
-                // Build a proper address from addressdetails, preserving street number
-                const ad = r.address || {};
-                const houseNum = ad.house_number || typedNumber || '';
-                const road = ad.road || '';
-                const suburb = ad.suburb || ad.town || ad.city_district || ad.village || '';
-                const state = ad.state || '';
-                const postcode = ad.postcode || '';
-
-                // Abbreviate state names
-                const STATE_ABBR = {
-                    'new south wales': 'NSW', 'victoria': 'VIC', 'queensland': 'QLD',
-                    'western australia': 'WA', 'south australia': 'SA', 'tasmania': 'TAS',
-                    'australian capital territory': 'ACT', 'northern territory': 'NT'
-                };
-                const stateAbbr = STATE_ABBR[state.toLowerCase()] || state;
-
-                // Construct full address — skip city (Brisbane, Sydney etc.) as suburb + state + postcode is sufficient
-                let streetPart = road;
-                if (houseNum && road && !road.startsWith(houseNum)) {
-                    streetPart = houseNum + ' ' + road;
-                }
-
-                const fullParts = [streetPart, suburb, stateAbbr, postcode].filter(Boolean);
-                const fullAddr = fullParts.join(', ');
-
-                // Display: main line = street + suburb, sub = state + postcode
-                const main = [streetPart, suburb].filter(Boolean).join(', ') || r.display_name.split(', ').slice(0, 2).join(', ');
-                const sub = [stateAbbr, postcode].filter(Boolean).join(' ');
-
-                const escaped = fullAddr.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-                return '<button type="button" class="ml-ac-item" onclick="selectAcAddress(\'' + escaped + '\')" onkeydown="acItemKeydown(event)">' +
-                    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' +
-                    '<div><div class="ml-ac-item-main">' + main + '</div><div class="ml-ac-item-sub">' + sub + '</div></div>' +
-                    '</button>';
-            }).join('');
-            dropdown.classList.add('active');
-        })
-        .catch(() => {
-            dropdown.innerHTML = '<div class="ml-ac-empty">Search unavailable — type your full address</div>';
-            dropdown.classList.add('active');
-        });
-}
-
-function fetchGoogleSuggestions(query) {
-    const dropdown = document.getElementById('ml_acDropdown');
-    const service = new google.maps.places.AutocompleteService();
-
-    service.getPlacePredictions({
-        input: query,
-        componentRestrictions: { country: 'au' },
-        types: ['address']
-    }, (predictions, status) => {
-        if (status !== google.maps.places.PlacesServiceStatus.OK || !predictions) {
-            dropdown.innerHTML = '<div class="ml-ac-empty">No addresses found</div>';
-            dropdown.classList.add('active');
-            return;
-        }
-
-        dropdown.innerHTML = predictions.map(p => {
-            const main = p.structured_formatting?.main_text || p.description;
-            const sub = p.structured_formatting?.secondary_text || '';
-            return '<button type="button" class="ml-ac-item" onclick="selectAcAddress(\'' + p.description.replace(/'/g, "\\'") + '\')" onkeydown="acItemKeydown(event)">' +
-                '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' +
-                '<div><div class="ml-ac-item-main">' + main + '</div><div class="ml-ac-item-sub">' + sub + '</div></div>' +
-                '</button>';
-        }).join('');
-        dropdown.classList.add('active');
-    });
-}
-
-function selectAcAddress(address) {
-    document.getElementById('ml_lookupAddress').value = address;
-    document.getElementById('ml_acDropdown').classList.remove('active');
-    document.getElementById('ml_addrClear').style.display = '';
-    updateSuburbMedian(address);
-    saveRecentSearch(address);
-}
-
-function acItemKeydown(e) {
-    if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        const next = e.target.nextElementSibling;
-        if (next) next.focus();
-    } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        const prev = e.target.previousElementSibling;
-        if (prev) prev.focus();
-        else document.getElementById('ml_lookupAddress').focus();
-    } else if (e.key === 'Escape') {
-        document.getElementById('ml_acDropdown').classList.remove('active');
-        document.getElementById('ml_lookupAddress').focus();
-    }
-}
-
-// ── Google Places init (if API key provided) ──────────────────
-function initGooglePlaces() {
-    // Google Places loaded — autocomplete will use it via fetchGoogleSuggestions
-    const hint = document.getElementById('ml_acHint');
-    if (hint) hint.textContent = 'Address autocomplete active — start typing';
-}
-
-window.initGooglePlaces = initGooglePlaces;
-
-// ══════════════════════════════════════════════════════════════
-// ── Form Persistence (localStorage) ──────────────────────────
-// ══════════════════════════════════════════════════════════════
-
-const FORM_STORAGE_PREFIX = 'mp-form-';
-
-// Tabs that have saveable forms
-const FORM_TABS = ['calculator', 'myloan', 'fhb', 'borrowing', 'stamp-duty', 'ratewatch', 'investor'];
-
-// Capture HTML default values before any restore (snapshot on first call)
-let _htmlDefaults = null;
-function captureHtmlDefaults() {
-    if (_htmlDefaults) return;
-    _htmlDefaults = {};
-    FORM_TABS.forEach(tab => {
-        const panel = document.getElementById('tab-' + tab);
-        if (!panel) return;
-        const map = {};
-        panel.querySelectorAll('input[id], select[id], textarea[id]').forEach(el => {
-            if (el.type === 'checkbox') map[el.id] = { type: 'checkbox', val: el.defaultChecked };
-            else if (el.tagName === 'SELECT') map[el.id] = { type: 'select', val: el.querySelector('option[selected]')?.value || el.options[0]?.value || '' };
-            else map[el.id] = { type: 'input', val: el.defaultValue };
-        });
-        _htmlDefaults[tab] = map;
-    });
-}
-
-function saveFormState(tab) {
-    const panel = document.getElementById('tab-' + tab);
-    if (!panel) return;
-    const data = {};
-    panel.querySelectorAll('input[id], select[id], textarea[id]').forEach(el => {
-        if (el.type === 'checkbox') data[el.id] = { type: 'checkbox', val: el.checked };
-        else if (el.tagName === 'SELECT') data[el.id] = { type: 'select', val: el.value };
-        else data[el.id] = { type: 'input', val: el.value };
-    });
-    // Save dynamic rate change rows for My Loan
-    if (tab === 'myloan') {
-        const rows = [];
-        document.querySelectorAll('#ml_rateChanges .ml-rate-row').forEach(row => {
-            const sel = row.querySelector('select');
-            const inputs = row.querySelectorAll('input[type="number"]');
-            rows.push({ month: sel?.value || '0', year: inputs[0]?.value || '', rate: inputs[1]?.value || '' });
-        });
-        data._mlRateRows = rows;
-    }
-    // Save dynamic rate change rows for Investor
-    if (tab === 'investor') {
-        const rows = [];
-        document.querySelectorAll('#inv_rateChanges .ml-rate-row').forEach(row => {
-            const sel = row.querySelector('select');
-            const inputs = row.querySelectorAll('input[type="number"]');
-            rows.push({ month: sel?.value || '0', year: inputs[0]?.value || '', rate: inputs[1]?.value || '' });
-        });
-        data._invRateRows = rows;
-    }
-    try { localStorage.setItem(FORM_STORAGE_PREFIX + tab, JSON.stringify(data)); } catch (e) { /* quota */ }
-}
-
-function restoreFormState(tab) {
-    const raw = localStorage.getItem(FORM_STORAGE_PREFIX + tab);
-    if (!raw) return false;
-    let data;
-    try { data = JSON.parse(raw); } catch (e) { return false; }
-    if (!data || typeof data !== 'object') return false;
-
-    const panel = document.getElementById('tab-' + tab);
-    if (!panel) return false;
-
-    // Restore standard inputs
-    Object.keys(data).forEach(id => {
-        if (id.startsWith('_')) return; // skip special keys
-        const entry = data[id];
-        const el = document.getElementById(id);
-        if (!el) return;
-        if (entry.type === 'checkbox') {
-            el.checked = entry.val;
-            // Trigger change for toggles that show/hide sections
-            el.dispatchEvent(new Event('change', { bubbles: true }));
-        } else if (entry.type === 'select') {
-            el.value = entry.val;
-            el.dispatchEvent(new Event('change', { bubbles: true }));
-        } else {
-            el.value = entry.val;
-            el.dispatchEvent(new Event('input', { bubbles: true }));
-        }
-    });
-
-    // Restore My Loan dynamic rate rows
-    if (tab === 'myloan' && Array.isArray(data._mlRateRows)) {
-        document.getElementById('ml_rateChanges').innerHTML = '';
-        mlRateChangeCount = 0;
-        data._mlRateRows.forEach(r => {
-            addRateChange(parseInt(r.month), parseInt(r.year) || undefined, r.rate || undefined);
-        });
-    }
-
-    // Restore Investor dynamic rate rows
-    if (tab === 'investor' && Array.isArray(data._invRateRows)) {
-        document.getElementById('inv_rateChanges').innerHTML = '';
-        invRateChangeCount = 0;
-        data._invRateRows.forEach(r => {
-            addInvRateChange(parseInt(r.month), parseInt(r.year) || undefined, r.rate || undefined);
-        });
-    }
-
-    return true;
-}
-
-function resetFormDefaults(tab) {
-    localStorage.removeItem(FORM_STORAGE_PREFIX + tab);
-    captureHtmlDefaults();
-    const defaults = _htmlDefaults[tab];
-    if (!defaults) { location.reload(); return; }
-
-    const panel = document.getElementById('tab-' + tab);
-    if (!panel) { location.reload(); return; }
-
-    Object.keys(defaults).forEach(id => {
-        const entry = defaults[id];
-        const el = document.getElementById(id);
-        if (!el) return;
-        if (entry.type === 'checkbox') {
-            el.checked = entry.val;
-            el.dispatchEvent(new Event('change', { bubbles: true }));
-        } else if (entry.type === 'select') {
-            el.value = entry.val;
-            el.dispatchEvent(new Event('change', { bubbles: true }));
-        } else {
-            el.value = entry.val;
-            el.dispatchEvent(new Event('input', { bubbles: true }));
-        }
-    });
-
-    // Clear dynamic rows
-    if (tab === 'myloan') {
-        document.getElementById('ml_rateChanges').innerHTML = '';
-        mlRateChangeCount = 0;
-    }
-    if (tab === 'investor') {
-        document.getElementById('inv_rateChanges').innerHTML = '';
-        invRateChangeCount = 0;
-    }
-
-    // Update slider fills
-    panel.querySelectorAll('input[type="range"]').forEach(s => updateSliderFill(s));
-}
-
-// Debounced auto-save
-let _saveTimers = {};
-function debouncedSave(tab) {
-    clearTimeout(_saveTimers[tab]);
-    _saveTimers[tab] = setTimeout(() => saveFormState(tab), 400);
-}
-
-function initFormPersistence() {
-    captureHtmlDefaults();
-
-    // Restore all tabs
-    FORM_TABS.forEach(tab => restoreFormState(tab));
-
-    // After restore, update all slider fills
-    document.querySelectorAll('input[type="range"]').forEach(s => updateSliderFill(s));
-
-    // Auto-save on any input change within form tabs
-    FORM_TABS.forEach(tab => {
-        const panel = document.getElementById('tab-' + tab);
-        if (!panel) return;
-        panel.addEventListener('input', () => debouncedSave(tab));
-        panel.addEventListener('change', () => debouncedSave(tab));
-    });
 }
