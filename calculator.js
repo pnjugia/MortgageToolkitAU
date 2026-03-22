@@ -4006,20 +4006,9 @@ function displayInvestorResults(r) {
     // Store result for frequency toggle re-render
     window._lastInvResult = r;
 
-    // ── Populate year selector ────────────────────────────────
-    const yearSel = document.getElementById('inv_cfYearSelect');
-    if (yearSel && r.depSchedule.length) {
-        const prev = parseInt(yearSel.value) || 1;
-        yearSel.innerHTML = r.depSchedule.map(row =>
-            `<option value="${row.year}"${row.year === 1 ? ' selected' : ''}>Year ${row.year} (${row.calYear})</option>`
-        ).join('');
-        // Restore previous selection if still valid
-        if (prev > 1 && prev <= r.depSchedule.length) yearSel.value = prev;
-    }
-
     // ── Cash flow rows (annual by default, year 1) ────────────
     const activeFreq = document.querySelector('.inv-freq-btn.active')?.dataset.freq || 'annual';
-    const activeYear = parseInt(yearSel?.value) || 1;
+    const activeYear = 1;
     renderInvKpiStrip(r, activeYear);
     renderCashFlowRows(r, activeFreq, activeYear);
 
@@ -4460,9 +4449,6 @@ function renderInvKpiStrip(r, yearNum) {
 
 function onKpiYearChange() {
     const yearNum = parseInt(document.getElementById('inv_kpiYearSelect')?.value) || 1;
-    // Sync the CF year selector
-    const cfSel = document.getElementById('inv_cfYearSelect');
-    if (cfSel) cfSel.value = yearNum;
     // Re-render all year-dependent sections
     if (window._lastInvResult) {
         renderInvKpiStrip(window._lastInvResult, yearNum);
@@ -4474,21 +4460,8 @@ function onKpiYearChange() {
 function switchCFFreq(freq, btn) {
     document.querySelectorAll('.inv-freq-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    const yearNum = parseInt(document.getElementById('inv_cfYearSelect')?.value) || 1;
+    const yearNum = parseInt(document.getElementById('inv_kpiYearSelect')?.value) || 1;
     if (window._lastInvResult) renderCashFlowRows(window._lastInvResult, freq, yearNum);
-}
-
-function onCFYearChange() {
-    const freq = document.querySelector('.inv-freq-btn.active')?.dataset.freq || 'annual';
-    const yearNum = parseInt(document.getElementById('inv_cfYearSelect')?.value) || 1;
-    // Sync the KPI year selector
-    const kpiSel = document.getElementById('inv_kpiYearSelect');
-    if (kpiSel) kpiSel.value = yearNum;
-    // Re-render all year-dependent sections
-    if (window._lastInvResult) {
-        renderInvKpiStrip(window._lastInvResult, yearNum);
-        renderCashFlowRows(window._lastInvResult, freq, yearNum);
-    }
 }
 
 function renderTaxBenefitRows(r, yearNum) {
