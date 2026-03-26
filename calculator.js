@@ -1,5 +1,5 @@
 /* ============================================================
-   MortgagePro — Enterprise Calculator JS
+   MortgageToolkit AU — Enterprise Calculator JS
    Features: P&I, IO, Offset, Extra Repayments, Comparison,
              Stamp Duty (all states), Borrowing Power,
              Charts (Chart.js), CSV Export, Dark Mode, PDF Print
@@ -21,7 +21,84 @@ let rw_fvChartInstance       = null;
 let rw_stressChartInstance   = null;
 let comparisonLoans = [];
 let lastResult = null;
-const RBA_RATE = 4.10; // current RBA cash rate (2025) — kept for any legacy references
+const RBA_RATE_FALLBACK = 4.10; // fallback RBA cash rate if live fetch fails
+let RBA_RATE = RBA_RATE_FALLBACK;
+let _rbaFetchPromise = null;
+
+// ─── Live RBA Cash Rate Fetch ─────────────────────────────────
+async function fetchLiveRBARate() {
+    // Return cached value if available this session
+    const cached = sessionStorage.getItem('rba_cash_rate');
+    const cachedTime = sessionStorage.getItem('rba_cash_rate_ts');
+    if (cached && cachedTime && (Date.now() - parseInt(cachedTime)) < 3600000) {
+        RBA_RATE = parseFloat(cached);
+        return RBA_RATE;
+    }
+
+    const CORS_PROXIES = [
+        'https://corsproxy.io/?url=',
+        'https://api.allorigins.win/raw?url='
+    ];
+    const RBA_URL = 'https://www.rba.gov.au/';
+
+    for (const proxy of CORS_PROXIES) {
+        try {
+            const resp = await fetch(proxy + encodeURIComponent(RBA_URL), {
+                signal: AbortSignal.timeout(6000)
+            });
+            if (!resp.ok) continue;
+            const html = await resp.text();
+
+            // Parse cash rate from RBA homepage — look for pattern like "4.10 %" near "Cash rate target"
+            const match = html.match(/cash\s*rate\s*target[\s\S]{0,200}?(\d+\.\d+)\s*%/i);
+            if (match) {
+                const rate = parseFloat(match[1]);
+                if (rate > 0 && rate < 20) {
+                    RBA_RATE = rate;
+                    sessionStorage.setItem('rba_cash_rate', rate.toString());
+                    sessionStorage.setItem('rba_cash_rate_ts', Date.now().toString());
+                    return rate;
+                }
+            }
+        } catch (e) {
+            // Try next proxy
+        }
+    }
+    // All proxies failed — keep fallback
+    return RBA_RATE;
+}
+
+// Update rate input defaults across all tabs when live RBA rate is fetched
+function updateRateDefaults() {
+    const typicalVar = Math.round((RBA_RATE + 2.19) * 100) / 100; // typical variable spread
+    const typicalFixed = Math.round((RBA_RATE + 1.89) * 100) / 100;
+
+    // Only update inputs that still have the old fallback defaults (user hasn't changed them)
+    const rateFields = [
+        { id: 'interestRate',     fallback: 6.29, newVal: typicalVar },
+        { id: 'rw_currentRate',   fallback: 6.29, newVal: typicalVar },
+        { id: 'rw_fixedRate',     fallback: 5.99, newVal: typicalFixed },
+        { id: 'inv_interestRate', fallback: 6.29, newVal: typicalVar },
+        { id: 'bpLoanRate',      fallback: 6.29, newVal: typicalVar },
+    ];
+
+    for (const f of rateFields) {
+        const el = document.getElementById(f.id);
+        if (!el) continue;
+        const current = parseFloat(el.value);
+        // Only update if user hasn't manually changed from the original default
+        if (Math.abs(current - f.fallback) < 0.01) {
+            el.value = f.newVal.toFixed(2);
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+    }
+
+    // Update all RBA rate badges/hints
+    document.querySelectorAll('.rba-live-badge').forEach(el => {
+        el.textContent = 'RBA ' + RBA_RATE.toFixed(2) + '%';
+        el.title = 'Live RBA cash rate target';
+    });
+}
 
 // ─── Init ─────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
@@ -53,8 +130,43 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
     initFormPersistence();
+    initStatCountUp();
+    // Fetch live RBA rate in background — updates RBA_RATE when resolved
+    _rbaFetchPromise = fetchLiveRBARate().then(() => updateRateDefaults());
     setTimeout(() => calculateMortgage(true), 50);
 });
+
+// ─── Stat Count-Up Animation ──────────────────────────────────
+function initStatCountUp() {
+    const bar = document.getElementById('homeStatsBar');
+    if (!bar) return;
+    const nums = bar.querySelectorAll('.home-stat-num[data-target]');
+    let animated = false;
+    const run = () => {
+        if (animated) return;
+        animated = true;
+        nums.forEach(el => {
+            const target = parseInt(el.dataset.target);
+            if (target === 0) { el.textContent = '0'; return; }
+            const duration = 1200;
+            const start = performance.now();
+            const tick = (now) => {
+                const progress = Math.min((now - start) / duration, 1);
+                const eased = 1 - Math.pow(1 - progress, 3);
+                el.textContent = Math.round(eased * target);
+                if (progress < 1) requestAnimationFrame(tick);
+            };
+            requestAnimationFrame(tick);
+        });
+    };
+    if ('IntersectionObserver' in window) {
+        new IntersectionObserver((entries, obs) => {
+            if (entries[0].isIntersecting) { run(); obs.disconnect(); }
+        }, { threshold: 0.3 }).observe(bar);
+    } else {
+        run();
+    }
+}
 
 // ─── Theme ────────────────────────────────────────────────────
 function initTheme() {
@@ -86,7 +198,25 @@ function initTabs() {
             document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
             tab.classList.add('active');
             document.getElementById('tab-' + id).classList.add('active');
+            // Update URL hash without scrolling
+            history.replaceState(null, '', '#' + id);
         });
+    });
+
+    // On load, activate tab from URL hash
+    const hash = window.location.hash.replace('#', '');
+    if (hash) {
+        const tab = document.querySelector('.nav-tab[data-tab="' + hash + '"]');
+        if (tab) tab.click();
+    }
+
+    // Handle browser back/forward
+    window.addEventListener('hashchange', () => {
+        const h = window.location.hash.replace('#', '');
+        if (h) {
+            const tab = document.querySelector('.nav-tab[data-tab="' + h + '"]');
+            if (tab) tab.click();
+        }
     });
 }
 
@@ -2784,7 +2914,7 @@ const RBA_CONTEXT = [
     { era: 'Pre-COVID',     year: '2019',    rate: 1.50 },
     { era: 'COVID low',     year: '2020–21', rate: 0.10 },
     { era: '2022–23 peak',  year: '2023',    rate: 4.35 },
-    { era: 'Current',       year: '2025',    rate: 4.10 },
+    { era: 'Current',       year: '2025–26', get rate() { return RBA_RATE; } },
 ];
 
 function calcRepayment(balance, annualRate, termYears, periodsPerYear) {
@@ -3216,30 +3346,33 @@ function switchToStampDuty(e) {
 }
 
 // ─── RBA Rate Check ───────────────────────────────────────────
-function fetchRBA() {
-    // RBA cash rate as of early 2025: 4.10%
-    // Typical variable mortgage spread: ~2.0–2.5% above cash rate
-    const RBA_CASH = 4.10;
-    const TYPICAL_VAR_LOW  = RBA_CASH + 2.0;  // ~6.10%
-    const TYPICAL_VAR_HIGH = RBA_CASH + 2.5;  // ~6.60%
+async function fetchRBA() {
+    // Wait for live rate if still loading
+    if (_rbaFetchPromise) await _rbaFetchPromise;
+
+    const RBA_CASH = RBA_RATE;
+    const TYPICAL_VAR_LOW  = RBA_CASH + 2.0;
+    const TYPICAL_VAR_HIGH = RBA_CASH + 2.5;
     const rate = parseFloat(document.getElementById('interestRate').value) || 0;
     const tag  = document.getElementById('rateComparison');
     const hint = document.getElementById('rateHint');
+    const isLive = RBA_RATE !== RBA_RATE_FALLBACK || sessionStorage.getItem('rba_cash_rate');
+    const sourceLabel = isLive ? ' (live from RBA)' : ' (cached)';
 
     if (hint) hint.style.display = '';
     if (rate < TYPICAL_VAR_LOW) {
         tag.textContent = 'Below market';
         tag.className   = 'rate-tag below';
-        if (hint) hint.textContent = 'Looks competitive — typical variable rates are ' + TYPICAL_VAR_LOW.toFixed(2) + '–' + TYPICAL_VAR_HIGH.toFixed(2) + '% (RBA cash rate ' + RBA_CASH + '%)';
+        if (hint) hint.textContent = 'Looks competitive — typical variable rates are ' + TYPICAL_VAR_LOW.toFixed(2) + '–' + TYPICAL_VAR_HIGH.toFixed(2) + '% (RBA cash rate ' + RBA_CASH + '%' + sourceLabel + ')';
     } else if (rate > TYPICAL_VAR_HIGH) {
         const over = (rate - TYPICAL_VAR_HIGH).toFixed(2);
         tag.textContent = over + '% above market';
         tag.className   = 'rate-tag above';
-        if (hint) hint.textContent = 'Worth reviewing — you may be able to negotiate or refinance. Typical variable: ' + TYPICAL_VAR_LOW.toFixed(2) + '–' + TYPICAL_VAR_HIGH.toFixed(2) + '%';
+        if (hint) hint.textContent = 'Worth reviewing — you may be able to negotiate or refinance. Typical variable: ' + TYPICAL_VAR_LOW.toFixed(2) + '–' + TYPICAL_VAR_HIGH.toFixed(2) + '%' + sourceLabel;
     } else {
         tag.textContent = 'Market rate';
         tag.className   = 'rate-tag';
-        if (hint) hint.textContent = 'In line with typical variable rates (' + TYPICAL_VAR_LOW.toFixed(2) + '–' + TYPICAL_VAR_HIGH.toFixed(2) + '%). RBA cash rate: ' + RBA_CASH + '%';
+        if (hint) hint.textContent = 'In line with typical variable rates (' + TYPICAL_VAR_LOW.toFixed(2) + '–' + TYPICAL_VAR_HIGH.toFixed(2) + '%). RBA cash rate: ' + RBA_CASH + '%' + sourceLabel;
     }
 }
 

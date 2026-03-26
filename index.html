@@ -1,9 +1,109 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-AU">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MortgagePro — Australian Mortgage Calculator</title>
+    <title>MortgageToolkit AU — Free Australian Mortgage Calculator, Borrowing Power & Investment Tools</title>
+
+    <!-- SEO Meta -->
+    <meta name="description" content="Free Australian mortgage toolkit — repayment calculator, borrowing power, stamp duty for all 8 states, first home buyer grants (FHOG, FHSS, FHG), loan comparison, RBA rate simulator, loan tracker & investment property analysis with depreciation. 100% private.">
+    <meta name="keywords" content="mortgage calculator australia, home loan calculator, repayment calculator, borrowing power calculator, how much can I borrow, serviceability calculator, APRA buffer, HEM benchmark, stamp duty calculator, upfront costs calculator, settlement costs, conveyancing costs, first home buyer grant, FHOG, FHSS, First Home Guarantee, FHG, Help to Buy, stamp duty exemption, loan comparison, compare home loans, rate watch, RBA rate simulator, fixed vs variable, interest rate stress test, break even analysis, investment property calculator, rental yield calculator, negative gearing, cash flow analysis, depreciation schedule, Div 40, Div 43, property growth, ROI calculator, tax benefit calculator, LMI calculator, loan tracker, equity tracker, offset account calculator, amortisation schedule, fortnightly repayment calculator, interest only loan, refinance calculator, free mortgage calculator, free home loan calculator, no signup mortgage calculator, private mortgage calculator, no data stored calculator, australian mortgage, property finance australia, LVR calculator">
+    <meta name="author" content="MortgageToolkit AU">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://mortgagetoolkitau.com/">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://mortgagetoolkitau.com/">
+    <meta property="og:title" content="MortgageToolkit AU — Free Australian Mortgage & Property Finance Toolkit">
+    <meta property="og:description" content="9 free tools for Australian home buyers, refinancers and investors. Calculate repayments, borrowing power, stamp duty, FHB grants, loan comparisons, rate scenarios and investment returns. 100% private — nothing stored.">
+    <meta property="og:site_name" content="MortgageToolkit AU">
+    <meta property="og:locale" content="en_AU">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="MortgageToolkit AU — Free Australian Mortgage Calculator">
+    <meta name="twitter:description" content="9 free tools: mortgage calculator, borrowing power, stamp duty, FHB grants, loan comparison, rate watch, investor analysis. APRA-aligned, all 8 states. 100% private.">
+
+    <!-- Geo targeting -->
+    <meta name="geo.region" content="AU">
+    <meta name="geo.placename" content="Australia">
+
+    <!-- Structured Data: WebApplication -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "MortgageToolkit AU",
+        "url": "https://mortgagetoolkitau.com",
+        "description": "Australia's free mortgage and property finance toolkit with 9 calculators covering repayments, borrowing power, stamp duty, first home buyer grants, loan comparison, rate scenarios and investment property analysis.",
+        "applicationCategory": "FinanceApplication",
+        "operatingSystem": "Any",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "AUD"
+        },
+        "featureList": [
+            "Mortgage repayment calculator",
+            "Borrowing power estimator",
+            "Stamp duty calculator for all Australian states",
+            "First home buyer grant checker (FHOG, FHSS, FHG)",
+            "Loan comparison tool",
+            "RBA rate change simulator",
+            "My Loan tracker",
+            "Investment property analyser with depreciation"
+        ],
+        "countryOfOrigin": {
+            "@type": "Country",
+            "name": "Australia"
+        }
+    }
+    </script>
+
+    <!-- Structured Data: FAQPage for common queries -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+            {
+                "@type": "Question",
+                "name": "How much can I borrow for a mortgage in Australia?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Your borrowing power depends on income, expenses, existing debts, and the lender's assessment rate (typically your rate plus a 3% APRA buffer). Use our free Borrowing Power calculator for an estimate based on Australian tax brackets and HEM benchmarks."
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "How much is stamp duty in Australia?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Stamp duty varies by state, property price, and buyer type. For example, a $750,000 property in NSW costs approximately $28,948 in stamp duty for an owner-occupier. First home buyers may be eligible for exemptions or concessions. Use our Stamp Duty calculator for all 8 states and territories."
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "What grants are available for first home buyers in Australia?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Australian first home buyers may access the First Home Owner Grant (FHOG, $10k-$30k depending on state), First Home Super Saver scheme (FHSS, up to $50k tax-free), First Home Guarantee (5% deposit, no LMI), stamp duty concessions, and Help to Buy. Use our FHB Hub to check eligibility across all schemes."
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "Is this mortgage calculator free and private?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Yes. MortgageToolkit AU is 100% free with no account required. All calculations run entirely in your browser — nothing is stored, tracked, or shared. Your data never leaves your device."
+                }
+            }
+        ]
+    }
+    </script>
+
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
@@ -19,7 +119,7 @@
                     <rect width="32" height="32" rx="8" fill="#0A2540"/>
                     <path d="M8 22L14 10L18 18L21 14L24 22" stroke="#00C896" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
-                <span class="logo-text">MortgagePro</span>
+                <span class="logo-text">MortgageToolkit</span>
                 <span class="logo-badge">AU</span>
             </button>
             <nav class="header-nav">
@@ -68,56 +168,103 @@
 
                 <!-- Hero -->
                 <div class="home-hero">
-                    <div class="home-hero-inner">
-                        <div class="home-hero-logo">
-                            <svg width="48" height="48" viewBox="0 0 32 32" fill="none">
-                                <rect width="32" height="32" rx="8" fill="#0A2540"/>
-                                <path d="M8 22L14 10L18 18L21 14L24 22" stroke="#00C896" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                            <div>
-                                <div class="home-hero-title">MortgagePro <span class="home-hero-badge">AU</span></div>
-                                <div class="home-hero-sub">Australian Mortgage &amp; Property Finance Toolkit</div>
-                            </div>
-                        </div>
-                        <p class="home-hero-desc">Australia's most comprehensive mortgage toolkit — built for buyers, refinancers, investors, and first-timers who want answers, not sales calls.</p>
+                    <div class="home-hero-grid">
+                        <div class="home-hero-inner">
+                            <p class="home-hero-eyebrow">Australian Mortgage &amp; Property Finance Toolkit</p>
+                            <h1 class="home-hero-headline">Every mortgage tool you need, in one place.</h1>
+                            <p class="home-hero-desc">Built for buyers, refinancers, investors, and first-timers who want answers — not sales calls.</p>
 
-                        <div class="home-hero-pillars">
-                            <div class="home-pillar">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                                <div>
-                                    <strong>Built for Australians</strong>
-                                    <span>RBA rates, APRA buffers, Australian tax brackets, state-by-state stamp duty, FHOG, FHSS &amp; First Home Guarantee — all accurate for 2025–26.</span>
-                                </div>
+                            <div class="home-cta-row">
+                                <button class="home-cta-btn" onclick="document.querySelector('[data-tab=calculator]').click()">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="16" y2="14"/></svg>
+                                    Calculate My Mortgage
+                                </button>
+                                <button class="home-cta-ghost" onclick="document.querySelector('.home-features').scrollIntoView({behavior:'smooth'})">
+                                    Explore All Tools
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                                </button>
                             </div>
-                            <div class="home-pillar">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                                <div>
-                                    <strong>Private &amp; free, always</strong>
-                                    <span>Nothing you enter is stored, tracked, or shared. All calculations run entirely in your browser — no account, no ads, no upsell. Form inputs auto-save locally so you can pick up where you left off.</span>
-                                </div>
-                            </div>
-                            <div class="home-pillar">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                                <div>
-                                    <strong>Save hours of research</strong>
-                                    <span>Every tool a broker or bank uses — repayment modelling, serviceability testing, cost breakdowns, scheme eligibility, investment analysis — in one tab-based workspace.</span>
-                                </div>
+
+                            <div class="home-social-proof">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                <span>100% private — nothing stored, tracked, or shared. Runs entirely in your browser.</span>
                             </div>
                         </div>
 
-                        <div class="home-stat-strip">
-                            <div class="home-stat"><span class="home-stat-num">9</span><span class="home-stat-label">tools</span></div>
-                            <div class="home-stat-div"></div>
-                            <div class="home-stat"><span class="home-stat-num">8</span><span class="home-stat-label">states &amp; territories</span></div>
-                            <div class="home-stat-div"></div>
-                            <div class="home-stat"><span class="home-stat-num">5</span><span class="home-stat-label">FHB schemes</span></div>
-                            <div class="home-stat-div"></div>
-                            <div class="home-stat"><span class="home-stat-num">0</span><span class="home-stat-label">data stored</span></div>
+                        <!-- Right: animated chart visual -->
+                        <div class="home-hero-visual">
+                            <div class="home-hero-mockup">
+                                <div class="mockup-header">
+                                    <span class="mockup-dot"></span>
+                                    <span class="mockup-dot"></span>
+                                    <span class="mockup-dot"></span>
+                                    <span class="mockup-title">Repayment Overview</span>
+                                </div>
+                                <div class="mockup-body">
+                                    <div class="mockup-kpi">
+                                        <span class="mockup-kpi-label">Monthly</span>
+                                        <span class="mockup-kpi-value">$3,714</span>
+                                    </div>
+                                    <div class="mockup-kpi">
+                                        <span class="mockup-kpi-label">Total Interest</span>
+                                        <span class="mockup-kpi-value mockup-kpi-red">$737k</span>
+                                    </div>
+                                    <div class="mockup-chart">
+                                        <div class="mockup-bar" style="--h:30%"><span>Yr 5</span></div>
+                                        <div class="mockup-bar" style="--h:50%"><span>Yr 10</span></div>
+                                        <div class="mockup-bar" style="--h:68%"><span>Yr 15</span></div>
+                                        <div class="mockup-bar" style="--h:82%"><span>Yr 20</span></div>
+                                        <div class="mockup-bar mockup-bar--accent" style="--h:100%"><span>Yr 30</span></div>
+                                    </div>
+                                    <div class="mockup-caption">Equity growth over loan term</div>
+                                </div>
+                            </div>
                         </div>
-                        <button class="home-cta-btn" onclick="document.querySelector('[data-tab=calculator]').click()">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="16" y2="14"/></svg>
-                            Get Started — Calculate My Mortgage
-                        </button>
+                    </div>
+                </div>
+
+                <!-- Trust pillars -->
+                <div class="home-pillars-grid">
+                    <div class="home-pillar-card">
+                        <div class="pillar-icon pillar-icon--emerald">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                        </div>
+                        <strong>Built for Australians</strong>
+                        <span>RBA rates, APRA buffers, state stamp duty, FHOG, FHSS &amp; First Home Guarantee — accurate for 2025–26.</span>
+                    </div>
+                    <div class="home-pillar-card">
+                        <div class="pillar-icon pillar-icon--blue">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        </div>
+                        <strong>Private &amp; free, always</strong>
+                        <span>Nothing stored, tracked, or shared. All calculations run in your browser — no account, no ads.</span>
+                    </div>
+                    <div class="home-pillar-card">
+                        <div class="pillar-icon pillar-icon--amber">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        </div>
+                        <strong>Save hours of research</strong>
+                        <span>Repayment modelling, serviceability testing, cost breakdowns, investment analysis — one workspace.</span>
+                    </div>
+                </div>
+
+                <!-- Stats strip -->
+                <div class="home-stats-bar" id="homeStatsBar">
+                    <div class="home-stat-card">
+                        <span class="home-stat-num" data-target="9">0</span>
+                        <span class="home-stat-label">tools</span>
+                    </div>
+                    <div class="home-stat-card">
+                        <span class="home-stat-num" data-target="8">0</span>
+                        <span class="home-stat-label">states &amp; territories</span>
+                    </div>
+                    <div class="home-stat-card">
+                        <span class="home-stat-num" data-target="5">0</span>
+                        <span class="home-stat-label">FHB schemes</span>
+                    </div>
+                    <div class="home-stat-card">
+                        <span class="home-stat-num" data-target="0">0</span>
+                        <span class="home-stat-label">data stored</span>
                     </div>
                 </div>
 
@@ -126,90 +273,98 @@
                     <h2 class="home-section-title">What's inside</h2>
                     <div class="home-cards">
 
-                        <div class="home-card" onclick="document.querySelector('[data-tab=calculator]').click()">
-                            <div class="home-card-icon home-card-icon--navy">
-                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="16" y2="14"/><line x1="8" y1="18" x2="12" y2="18"/></svg>
-                            </div>
-                            <div class="home-card-body">
-                                <h3>Mortgage Calculator</h3>
-                                <p>Calculate repayments for any frequency — monthly, fortnightly, or weekly. Model offset accounts, extra repayments, custom repayment amounts, and interest-only periods. Includes a full amortisation schedule with equity milestones, loan balance chart, and year-by-year summary.</p>
-                                <span class="home-card-tag">Core tool</span>
-                            </div>
-                        </div>
-
-                        <div class="home-card" onclick="document.querySelector('[data-tab=myloan]').click()">
-                            <div class="home-card-icon home-card-icon--blue">
-                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
-                            </div>
-                            <div class="home-card-body">
-                                <h3>My Loan Tracker</h3>
-                                <p>Track your existing loan from day one — enter your original terms, add every rate change, and see your current balance, interest paid, principal progress, and equity. Includes property valuation with suburb lookup, offset account with monthly contributions, rate history timeline, balance chart, yearly schedule, and CSV export.</p>
-                                <span class="home-card-tag home-card-tag--blue">Your loan</span>
-                            </div>
-                        </div>
-
-                        <div class="home-card home-card--highlight" onclick="document.querySelector('[data-tab=fhb]').click()">
-                            <div class="home-card-icon home-card-icon--emerald">
-                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-                            </div>
-                            <div class="home-card-body">
-                                <h3>First Home Buyer Hub</h3>
-                                <p>Navigate every federal and state grant, concession, and scheme in one place — FHOG ($10k–$30k depending on state), First Home Super Saver (up to $50k per person tax-free), First Home Guarantee (5% deposit, no LMI), stamp duty exemptions, and Help to Buy co-contribution.</p>
-                                <span class="home-card-tag home-card-tag--emerald">New buyers</span>
-                            </div>
-                        </div>
-
+                        <!-- 1. Borrowing Power — "How much can I borrow?" is the first question -->
                         <div class="home-card" onclick="document.querySelector('[data-tab=borrowing]').click()">
                             <div class="home-card-icon home-card-icon--blue">
                                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
                             </div>
                             <div class="home-card-body">
                                 <h3>Borrowing Power</h3>
-                                <p>Estimate how much you can borrow using Australian tax brackets, APRA's 3% serviceability buffer, and HEM expense benchmarks. Includes income shading, credit card commitment rules, rate sensitivity table, and actionable tips to increase your borrowing capacity.</p>
+                                <p>Estimate capacity using APRA's 3% buffer, HEM benchmarks, and income shading. Rate sensitivity table included.</p>
                                 <span class="home-card-tag home-card-tag--blue">Pre-purchase</span>
                             </div>
                         </div>
 
+                        <!-- 2. Mortgage Calculator — model the repayments -->
+                        <div class="home-card" onclick="document.querySelector('[data-tab=calculator]').click()">
+                            <div class="home-card-icon home-card-icon--navy">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="16" y2="14"/><line x1="8" y1="18" x2="12" y2="18"/></svg>
+                            </div>
+                            <div class="home-card-body">
+                                <h3>Mortgage Calculator</h3>
+                                <p>Model repayments at any frequency with offset accounts, extra repayments, and interest-only periods. Full amortisation schedule included.</p>
+                                <span class="home-card-tag">Core tool</span>
+                            </div>
+                        </div>
+
+                        <!-- 3. Stamp Duty & Costs — know the upfront cash needed -->
                         <div class="home-card" onclick="document.querySelector('[data-tab=stamp-duty]').click()">
                             <div class="home-card-icon home-card-icon--amber">
                                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                             </div>
                             <div class="home-card-body">
                                 <h3>Stamp Duty &amp; Upfront Costs</h3>
-                                <p>Calculate the full cash you need at settlement — stamp duty across all 8 states and territories, LMI, lender fees, conveyancing, inspections, and moving costs. Separate modes for owner-occupier and investor purchases with first home buyer concessions.</p>
+                                <p>Full settlement cash breakdown — stamp duty across all states, LMI, lender fees, conveyancing, and inspections.</p>
                                 <span class="home-card-tag home-card-tag--amber">Upfront costs</span>
                             </div>
                         </div>
 
+                        <!-- 4. Loan Comparison — compare your options -->
                         <div class="home-card" onclick="document.querySelector('[data-tab=comparison]').click()">
                             <div class="home-card-icon home-card-icon--navy">
                                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
                             </div>
                             <div class="home-card-body">
                                 <h3>Loan Comparison</h3>
-                                <p>Compare up to three loans side by side — different rates, terms, frequencies, offset balances, and annual fees. See total interest, monthly equivalent, 5-year true cost, and a balance-over-time chart. Automatically highlights the winner in each category.</p>
+                                <p>Compare up to three loans side by side — rates, terms, offsets, fees. Winner highlighted in each category.</p>
                                 <span class="home-card-tag">Decision tool</span>
                             </div>
                         </div>
 
+                        <!-- 5. First Home Buyer Hub — schemes & grants for first-timers -->
+                        <div class="home-card home-card--highlight" onclick="document.querySelector('[data-tab=fhb]').click()">
+                            <div class="home-card-icon home-card-icon--emerald">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                            </div>
+                            <div class="home-card-body">
+                                <h3>First Home Buyer Hub</h3>
+                                <p>Every federal and state grant in one place — FHOG, FHSS, First Home Guarantee, stamp duty exemptions, and Help to Buy.</p>
+                                <span class="home-card-tag home-card-tag--emerald">New buyers</span>
+                            </div>
+                        </div>
+
+                        <!-- 6. Rate Watch — understand rate risk before committing -->
                         <div class="home-card" onclick="document.querySelector('[data-tab=ratewatch]').click()">
                             <div class="home-card-icon home-card-icon--red">
                                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
                             </div>
                             <div class="home-card-body">
                                 <h3>Rate Watch</h3>
-                                <p>RBA rate change simulator showing repayment impact at every 0.25% increment. Fixed vs variable break-even analysis across future rate paths. Repayment stress test showing the maximum rate your income can sustain.</p>
+                                <p>RBA rate simulator, fixed vs variable break-even analysis, and stress test for the max rate your income can handle.</p>
                                 <span class="home-card-tag home-card-tag--red">Rate risk</span>
                             </div>
                         </div>
 
+                        <!-- 7. My Loan Tracker — post-purchase ongoing tracking -->
+                        <div class="home-card" onclick="document.querySelector('[data-tab=myloan]').click()">
+                            <div class="home-card-icon home-card-icon--blue">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+                            </div>
+                            <div class="home-card-body">
+                                <h3>My Loan Tracker</h3>
+                                <p>Track your existing loan — rate changes, balance, equity, and offset. Includes valuation lookup and CSV export.</p>
+                                <span class="home-card-tag home-card-tag--blue">Your loan</span>
+                            </div>
+                        </div>
+
+                        <!-- 8. Investor Tools — advanced, for experienced users -->
                         <div class="home-card" onclick="document.querySelector('[data-tab=investor]').click()">
                             <div class="home-card-icon home-card-icon--emerald">
                                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
                             </div>
                             <div class="home-card-body">
                                 <h3>Investor Tools</h3>
-                                <p>Full investment property analysis — gross and net yield, year-by-year cash flow with rate change modelling, negative/positive gearing, tax benefit by year, offset account projections, Div 40 &amp; Div 43 depreciation schedules, acquisition costs with stamp duty &amp; LMI, true ROI, and a 30-year equity growth chart. Auto-populates historical interest rates from 2010–2026.</p>
+                                <p>Yield, cash flow, gearing, tax benefits, depreciation schedules, acquisition costs, ROI, and 30-year equity projections.</p>
                                 <span class="home-card-tag home-card-tag--emerald">Investors</span>
                             </div>
                         </div>
@@ -225,7 +380,7 @@
                         </div>
                         <div class="home-disclaimer-content">
                             <h4>Important Disclaimer</h4>
-                            <p>MortgagePro AU is an independent calculation and educational tool. All figures produced are <strong>estimates only</strong> and are provided for illustrative and informational purposes. They do not constitute financial advice, credit advice, or a credit quote under the <em>National Consumer Credit Protection Act 2009</em> (Cth).</p>
+                            <p>MortgageToolkit AU is an independent calculation and educational tool. All figures produced are <strong>estimates only</strong> and are provided for illustrative and informational purposes. They do not constitute financial advice, credit advice, or a credit quote under the <em>National Consumer Credit Protection Act 2009</em> (Cth).</p>
                             <p>Calculations rely on inputs you provide and standard mathematical formulas. They do not account for your complete financial circumstances, lender credit policies, changes in interest rates, government scheme eligibility rules, or other factors that may affect the actual cost or availability of a loan or grant.</p>
                             <p>Before making any financial decision — including purchasing property, applying for a loan, accessing government schemes, or structuring an investment — you should seek advice from a:</p>
                             <ul class="home-disclaimer-list">
@@ -235,7 +390,7 @@
                                 <li><strong>Registered tax agent</strong> (Tax Practitioners Board registered) for depreciation, negative gearing, and FHSS tax matters</li>
                                 <li><strong>Solicitor or conveyancer</strong> for stamp duty, title, and contract matters</li>
                             </ul>
-                            <p class="home-disclaimer-footer">MortgagePro AU does not collect, store, or share any data you enter. All calculations run locally in your browser. &nbsp;·&nbsp; MortgagePro AU is not affiliated with any lender, broker, or government agency. &nbsp;·&nbsp; Scheme rules (FHOG, FHSS, First Home Guarantee, Help to Buy) change — verify current conditions directly with the relevant state revenue office or the ATO.</p>
+                            <p class="home-disclaimer-footer">MortgageToolkit AU does not collect, store, or share any data you enter. All calculations run locally in your browser. &nbsp;·&nbsp; MortgageToolkit AU is not affiliated with any lender, broker, or government agency. &nbsp;·&nbsp; Scheme rules (FHOG, FHSS, First Home Guarantee, Help to Buy) change — verify current conditions directly with the relevant state revenue office or the ATO.</p>
                         </div>
                     </div>
                 </div>
@@ -310,6 +465,7 @@
                                     <span class="input-suffix">%</span>
                                 </div>
                                 <div class="rate-context">
+                                    <span class="rba-live-badge rate-tag">RBA 4.10%</span>
                                     <span id="rateComparison" class="rate-tag"></span>
                                     <button type="button" class="link-btn" onclick="fetchRBA()">Check RBA rate</button>
                                 </div>
@@ -636,7 +792,7 @@
                         <!-- Disclaimer bubble -->
                         <div class="calc-disclaimer-bubble">
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                            <p>All figures are estimates for illustrative purposes only and do not constitute financial advice. Mortgage repayments depend on your individual circumstances, lender policies, and market conditions. Before making any financial decisions, please consult a <strong>licensed mortgage broker</strong>, your <strong>bank or lender</strong>, or a <strong>registered financial adviser</strong>. MortgagePro AU is a calculation tool only.</p>
+                            <p>All figures are estimates for illustrative purposes only and do not constitute financial advice. Mortgage repayments depend on your individual circumstances, lender policies, and market conditions. Before making any financial decisions, please consult a <strong>licensed mortgage broker</strong>, your <strong>bank or lender</strong>, or a <strong>registered financial adviser</strong>. MortgageToolkit AU is a calculation tool only.</p>
                         </div>
                     </div>
 
@@ -1227,6 +1383,9 @@
                                 <div class="input-wrap">
                                 <input type="number" id="bpLoanRate" value="6.29" step="0.01">
                                 <span class="input-suffix">%</span></div>
+                                <div class="rate-context">
+                                    <span class="rba-live-badge rate-tag">RBA 4.10%</span>
+                                </div>
                             </div>
                             <div class="form-group">
                                 <label for="bpLoanTerm">Loan Term</label>
@@ -1753,7 +1912,10 @@
                             <div class="input-wrap">
                             <input type="number" id="rw_currentRate" value="6.29" step="0.01" min="0" max="20">
                             <span class="input-suffix">%</span></div>
-                            <small class="field-hint">RBA cash rate: 4.10% — typical variable spread ~2.0–2.5%</small>
+                            <div class="rate-context">
+                                <span class="rba-live-badge rate-tag">RBA 4.10%</span>
+                                <small class="field-hint" style="margin:0">Typical variable spread ~2.0–2.5% above cash rate</small>
+                            </div>
                         </div>
                         <div class="form-group">
                             <label for="rw_remainingTerm">Remaining Loan Term</label>
@@ -2015,6 +2177,9 @@
                             <div class="input-wrap">
                                 <input type="number" id="inv_interestRate" value="6.29" min="0" max="20" step="0.01">
                                 <span class="input-suffix">%</span>
+                            </div>
+                            <div class="rate-context">
+                                <span class="rba-live-badge rate-tag">RBA 4.10%</span>
                             </div>
                         </div>
                         <div class="form-group">
